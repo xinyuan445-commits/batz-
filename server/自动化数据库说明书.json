@@ -1,0 +1,166 @@
+{
+  "tableName": "auto_line_table",
+  "description": "记录注塑机的全生命周期过程数据",
+  "columns": [
+    {
+      "name": "Id",
+      "type": "BIGINT",
+      "description": "自增主键"
+    },
+    {
+      "name": "CreatedTime",
+      "type": "DATETIME",
+      "description": "创建时间"
+    },
+    {
+      "name": "GroupId",
+      "type": "NVARCHAR(50)",
+      "description": "组号 (生产批次)"
+    },
+    {
+      "name": "PartNumber",
+      "type": "NVARCHAR(50)",
+      "description": "产品ID (条码)"
+    },
+    {
+      "name": "IsOk",
+      "type": "BIT",
+      "description": "是否OK产品 (0=NG, 1=OK)"
+    },
+    {
+      "name": "IsPrinted",
+      "type": "BIT",
+      "description": "是否已打印标签"
+    },
+    {
+      "name": "tmCycleTime",
+      "type": "REAL",
+      "description": "循环时间 (秒)"
+    },
+    {
+      "name": "tmClpClsTime",
+      "type": "REAL",
+      "description": "关模时间 (秒)"
+    },
+    {
+      "name": "tmInjTime",
+      "type": "REAL",
+      "description": "射出时间 (秒)"
+    },
+    {
+      "name": "tmTurnTime",
+      "type": "REAL",
+      "description": "转保压时间 (秒)"
+    },
+    {
+      "name": "tmChargeTime",
+      "type": "REAL",
+      "description": "储料时间 (秒)"
+    },
+    {
+      "name": "tmClpOpnTime",
+      "type": "REAL",
+      "description": "开模时间 (秒)"
+    },
+    {
+      "name": "tmInjBackTime",
+      "type": "REAL",
+      "description": "射退时间 (秒)"
+    },
+    {
+      "name": "tmEjectTime",
+      "type": "REAL",
+      "description": "托模时间 (秒)"
+    },
+    {
+      "name": "tmFetchTime",
+      "type": "REAL",
+      "description": "取件时间 (秒)"
+    },
+    {
+      "name": "tmClpOpnPosi",
+      "type": "REAL",
+      "description": "开模位置"
+    },
+    {
+      "name": "tmInjStartPosi",
+      "type": "REAL",
+      "description": "射出起点"
+    },
+    {
+      "name": "tmInjEndPosi",
+      "type": "REAL",
+      "description": "射出终点"
+    },
+    {
+      "name": "tmTurnPosi",
+      "type": "REAL",
+      "description": "转保压位置"
+    },
+    {
+      "name": "tmTurnPress",
+      "type": "REAL",
+      "description": "转保压压力"
+    },
+    {
+      "name": "tmInjMaxPress",
+      "type": "REAL",
+      "description": "射出尖压"
+    },
+    {
+      "name": "tmChargeMaxPress",
+      "type": "REAL",
+      "description": "储料尖压"
+    },
+    {
+      "name": "tmTemp1_Current",
+      "type": "REAL",
+      "description": "实际温度 1"
+    },
+    {
+      "name": "tmTemp2_Current",
+      "type": "REAL",
+      "description": "实际温度 2"
+    },
+    {
+      "name": "tmTemp3_Current",
+      "type": "REAL",
+      "description": "实际温度 3"
+    },
+    {
+      "name": "tmTemp4_Current",
+      "type": "REAL",
+      "description": "实际温度 4"
+    },
+    {
+      "name": "tmTemp5_Current",
+      "type": "REAL",
+      "description": "实际温度 5"
+    },
+    {
+      "name": "tmTemp6_Current",
+      "type": "REAL",
+      "description": "实际温度 6"
+    },
+    {
+      "name": "tmTemp7_Current",
+      "type": "REAL",
+      "description": "实际温度 7"
+    },
+    {
+      "name": "tmTemp8_Current",
+      "type": "REAL",
+      "description": "实际温度 8"
+    },
+    {
+      "name": "tmTemp9_Current",
+      "type": "REAL",
+      "description": "实际温度 9"
+    },
+    {
+      "name": "tmCoolingTime",
+      "type": "REAL",
+      "description": "模具冷却时间 (秒)"
+    }
+  ]
+}

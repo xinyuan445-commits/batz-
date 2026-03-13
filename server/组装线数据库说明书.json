@@ -1,0 +1,415 @@
+{
+  "op10_table": [
+    {
+      "column_name": "CreatedTime",
+      "data_type": "DATETIME",
+      "description": ""
+    },
+    {
+      "column_name": "Code",
+      "data_type": "NVARCHAR(255)",
+      "description": "产品编码（条码保存用）"
+    },
+    {
+      "column_name": "ProductStatus",
+      "data_type": "INT",
+      "description": "加工总结果 1=OK 2=NG"
+    },
+    {
+      "column_name": "Production_PhotoResult1",
+      "data_type": "INT",
+      "description": "生产拍照结果1"
+    },
+    {
+      "column_name": "Production_PhotoResult2",
+      "data_type": "INT",
+      "description": "生产拍照结果2"
+    },
+    {
+      "column_name": "Production_PhotoResult3",
+      "data_type": "INT",
+      "description": "生产拍照结果3"
+    },
+    {
+      "column_name": "Production_Circle1_Diameter",
+      "data_type": "REAL",
+      "description": "生产圆1直径"
+    },
+    {
+      "column_name": "Production_Circle2_Diameter",
+      "data_type": "REAL",
+      "description": "生产圆2直径"
+    },
+    {
+      "column_name": "Production_Circle3_Diameter",
+      "data_type": "REAL",
+      "description": "生产圆3直径"
+    },
+    {
+      "column_name": "Production_CenterDist1",
+      "data_type": "REAL",
+      "description": "生产圆心间距1"
+    },
+    {
+      "column_name": "Production_CenterDist2",
+      "data_type": "REAL",
+      "description": "生产圆心间距2"
+    },
+    {
+      "column_name": "Production_CenterDist3",
+      "data_type": "REAL",
+      "description": "生产圆心间距3"
+    },
+    {
+      "column_name": "CalibOK_PhotoResult1",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_PhotoResult2",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_PhotoResult3",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_Circle1_Diameter",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_Circle2_Diameter",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_Circle3_Diameter",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_CenterDist1",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_CenterDist2",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_CenterDist3",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult1",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult2",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult3",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_Circle1_Diameter",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_Circle2_Diameter",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_Circle3_Diameter",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_CenterDist1",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_CenterDist2",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_CenterDist3",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "IsShielded",
+      "data_type": "BIT",
+      "description": "是否屏蔽检索"
+    }
+  ],
+  "op20_table": [
+    {
+      "column_name": "CreatedTime",
+      "data_type": "DATETIME",
+      "description": ""
+    },
+    {
+      "column_name": "Code",
+      "data_type": "NVARCHAR(255)",
+      "description": "产品编码"
+    },
+    {
+      "column_name": "ProductStatus",
+      "data_type": "INT",
+      "description": "加工总结果 1=OK 2=NG"
+    },
+    {
+      "column_name": "PressResult_Left",
+      "data_type": "INT",
+      "description": "左压装结果"
+    },
+    {
+      "column_name": "PressResult_Right",
+      "data_type": "INT",
+      "description": "右压装结果"
+    },
+    {
+      "column_name": "PressResult_Back",
+      "data_type": "INT",
+      "description": "后压装结果"
+    },
+    {
+      "column_name": "PressPressure_Left",
+      "data_type": "REAL",
+      "description": "左压装压力"
+    },
+    {
+      "column_name": "PressDisplacement_Left",
+      "data_type": "REAL",
+      "description": "左压装位移"
+    },
+    {
+      "column_name": "PressPressure_Right",
+      "data_type": "REAL",
+      "description": "右压装压力"
+    },
+    {
+      "column_name": "PressDisplacement_Right",
+      "data_type": "REAL",
+      "description": "右压装位移"
+    },
+    {
+      "column_name": "PressPressure_Back",
+      "data_type": "REAL",
+      "description": "后压装压力"
+    },
+    {
+      "column_name": "PressDisplacement_Back",
+      "data_type": "REAL",
+      "description": "后压装位移"
+    },
+    {
+      "column_name": "IsShielded",
+      "data_type": "BIT",
+      "description": "是否屏蔽检索"
+    }
+  ],
+  "op30_table": [
+    {
+      "column_name": "CreatedTime",
+      "data_type": "DATETIME",
+      "description": ""
+    },
+    {
+      "column_name": "Code",
+      "data_type": "NVARCHAR(255)",
+      "description": "产品编码"
+    },
+    {
+      "column_name": "ProductStatus",
+      "data_type": "INT",
+      "description": "加工总结果 1=OK 2=NG"
+    },
+    {
+      "column_name": "Production_PhotoResult1",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "Production_PhotoResult2",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "Production_PhotoResult3",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "Production_PhotoResult4",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "Production_AngleResult_Vertical",
+      "data_type": "INT",
+      "description": "生产垂直角度结果"
+    },
+    {
+      "column_name": "Production_AngleResult_LeftParallel",
+      "data_type": "INT",
+      "description": "生产左平行角度结果"
+    },
+    {
+      "column_name": "Production_AngleResult_RightParallel",
+      "data_type": "INT",
+      "description": "生产右平行角度结果"
+    },
+    {
+      "column_name": "Production_Angle_Vertical",
+      "data_type": "REAL",
+      "description": "生产垂直角度"
+    },
+    {
+      "column_name": "Production_Angle_LeftParallel",
+      "data_type": "REAL",
+      "description": "生产左平行角度"
+    },
+    {
+      "column_name": "Production_Angle_RightParallel",
+      "data_type": "REAL",
+      "description": "生产右平行角度"
+    },
+    {
+      "column_name": "CalibOK_PhotoResult1",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_PhotoResult2",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_PhotoResult3",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_PhotoResult4",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_AngleResult_Vertical",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_AngleResult_LeftParallel",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_AngleResult_RightParallel",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_Angle_Vertical",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_Angle_LeftParallel",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibOK_Angle_RightParallel",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult1",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult2",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult3",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_PhotoResult4",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_AngleResult_Vertical",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_AngleResult_LeftParallel",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_AngleResult_RightParallel",
+      "data_type": "INT",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_Angle_Vertical",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_Angle_LeftParallel",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "CalibNG_Angle_RightParallel",
+      "data_type": "REAL",
+      "description": ""
+    },
+    {
+      "column_name": "IsShielded",
+      "data_type": "BIT",
+      "description": "是否屏蔽检索"
+    }
+  ],
+  "op40_table": [
+    {
+      "column_name": "Code",
+      "data_type": "NVARCHAR(255)",
+      "description": "包装台Code"
+    },
+    {
+      "column_name": "Station",
+      "data_type": "NVARCHAR(50)",
+      "description": "工位名称"
+    },
+    {
+      "column_name": "CreatedTime",
+      "data_type": "DATETIME",
+      "description": "创建时间"
+    }
+  ]
+}
