@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #0b1121;
+  color: white;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: #020617;
+}
+
+.bg-tech-pattern {
+  position: relative;
+  background: 
+    linear-gradient(to bottom, #020617, #0f172a);
+  overflow: hidden;
+}
+
+/* Digital Rain / Matrix Effect */
+.bg-tech-pattern::before {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  background: 
+    linear-gradient(transparent 50%, rgba(56, 189, 248, 0.1) 50%),
+    linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(56, 189, 248, 0.1) 50%, rgba(255,255,255,0) 100%);
+  background-size: 100% 4px, 200px 100%;
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Moving Grid Floor */
+.bg-tech-pattern::after {
+  content: "";
+  position: absolute;
+  bottom: -50%;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(56, 189, 248, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.2) 1px, transparent 1px);
+  background-size: 40px 40px;
+  transform: perspective(500px) rotateX(60deg);
+  animation: gridMove 10s linear infinite;
+  opacity: 0.3;
+  z-index: 0;
+  mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, transparent 60%);
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(50%); }
+}
+
+@keyframes gridMove {
+  0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+  100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
+}
+
+/* Custom Scrollbar for dashboard */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5); 
+}
+::-webkit-scrollbar-thumb {
+  background: #334155; 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569; 
+}
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-md bg-opacity-70 border border-white/5 shadow-glass;
+  }
+  
+  .tech-border-blue {
+    @apply border border-cyan-500/30 shadow-[0_0_10px_rgba(0,240,255,0.1)];
+  }
+  
+  .tech-card {
+    background: linear-gradient(135deg, rgba(21, 30, 50, 0.9) 0%, rgba(21, 30, 50, 0.7) 100%);
+    @apply backdrop-blur-sm border border-white/10 rounded-lg;
+  }
+}
