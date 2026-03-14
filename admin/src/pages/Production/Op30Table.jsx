@@ -15,14 +15,6 @@ const columns = [
     sorter: true,
     width: 180,
     render: (_, record) => dayjs(record.CreatedTime).format('YYYY-MM-DD HH:mm:ss'),
-    search: {
-      transform: (value) => {
-        return {
-          startTime: value[0],
-          endTime: value[1],
-        };
-      },
-    },
   },
   {
     title: '产品条码',
@@ -51,21 +43,21 @@ const columns = [
     dataIndex: 'Production_Angle_Vertical',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.Production_Angle_Vertical != null ? Number(record.Production_Angle_Vertical).toFixed(2) : '-',
   },
   {
     title: '左平行角度 (°)',
     dataIndex: 'Production_Angle_LeftParallel',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.Production_Angle_LeftParallel != null ? Number(record.Production_Angle_LeftParallel).toFixed(2) : '-',
   },
   {
     title: '右平行角度 (°)',
     dataIndex: 'Production_Angle_RightParallel',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.Production_Angle_RightParallel != null ? Number(record.Production_Angle_RightParallel).toFixed(2) : '-',
   },
   {
     title: '垂直结果',
@@ -160,12 +152,26 @@ const Op30Table = () => {
         }}
         request={async (params, sort, filter) => {
           try {
+            // Check if date filter is applied. If not, default to current day
+            let startTime = params.CreatedTime?.[0];
+            let endTime = params.CreatedTime?.[1];
+
+            // If no date range is selected, default to today
+            if (!startTime && !endTime) {
+               startTime = dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+               endTime = dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            } else {
+               // If date range is selected, format it properly
+               startTime = dayjs(startTime).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+               endTime = dayjs(endTime).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            }
+
             const response = await axios.get('http://localhost:3001/api/admin/production/op30', {
               params: {
                 current: params.current,
                 pageSize: params.pageSize,
-                startTime: params.CreatedTime?.[0], // Antd ProTable passes date range array
-                endTime: params.CreatedTime?.[1],
+                startTime: startTime, 
+                endTime: endTime,
                 status: params.ProductStatus, // 传递状态查询参数
               },
             });
@@ -183,6 +189,12 @@ const Op30Table = () => {
               total: 0,
             };
           }
+        }}
+        form={{
+          // Set initial values for the search form to show today's date by default
+          initialValues: {
+            CreatedTime: [dayjs().startOf('day'), dayjs().endOf('day')],
+          },
         }}
         columns={columns}
         dateFormatter="string"

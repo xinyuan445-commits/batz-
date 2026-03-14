@@ -9,7 +9,8 @@ const config = {
     database: process.env.DB_NAME,
     options: {
         encrypt: false, // 对于本地开发，通常设置为 false
-        trustServerCertificate: true // 信任自签名证书
+        trustServerCertificate: true, // 信任自签名证书
+        useUTC: false // 数据库时间作为本地时间处理，解决加8小时的问题
     }
 };
 

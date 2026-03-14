@@ -110,11 +110,20 @@ const handlePaginatedRequest = async (req, res, tableName, queryBuilder) => {
 
         if (startTime) {
             whereClause += " AND CreatedTime >= @startTime";
+            // 确保传入的时间是字符串格式，并处理可能的时区或格式问题
+            // 如果前端传的是 '2026-03-13 00:00:00'，这里直接作为字符串比较即可
+            // 只要数据库中的 CreatedTime 是 datetime 类型，SQL Server 会自动处理字符串到日期的隐式转换
             request.input('startTime', sql.VarChar, startTime);
         }
         if (endTime) {
             whereClause += " AND CreatedTime <= @endTime";
-            request.input('endTime', sql.VarChar, endTime);
+            // 确保结束时间包含毫秒，覆盖全天
+            if (!endTime.includes('.')) {
+                // 如果是 YYYY-MM-DD HH:mm:ss 格式，追加 .999
+                request.input('endTime', sql.VarChar, endTime + '.999');
+            } else {
+                request.input('endTime', sql.VarChar, endTime);
+            }
         }
         if (code) {
             // Check if column exists or use generic approach
@@ -194,6 +203,54 @@ router.get('/production/op30', async (req, res) => {
 // Automation Data API
 router.get('/production/automation', async (req, res) => {
     await handlePaginatedRequest(req, res, 'auto_line_table', buildAutomationQuery);
+});
+
+// Traceability Query API
+router.get('/traceability', async (req, res) => {
+    try {
+        const { code } = req.query;
+        if (!code) {
+            return res.status(400).json({ success: false, error: 'Code is required' });
+        }
+
+        // We run queries in parallel
+        // Use separate request objects for each query to avoid parameter conflicts if any (though we use same params)
+        // But safer to create new request for each query execution in Promise.all
+        const pool = await poolPromise;
+        const likeCode = `%${code}%`;
+
+        // We run queries in parallel
+        // Automation table: PartNumber -> Code, IsOk -> ProductStatus
+        const queryOp10 = `SELECT 'OP10' as Source, CreatedTime, Code, ProductStatus, Production_PhotoResult1, Production_PhotoResult2, Production_PhotoResult3 FROM op10_table WHERE Code LIKE @likeCode`;
+        const queryOp20 = `SELECT 'OP20' as Source, CreatedTime, Code, ProductStatus, PressResult_Left, PressResult_Right, PressResult_Back FROM op20_table WHERE Code LIKE @likeCode`;
+        const queryOp30 = `SELECT 'OP30' as Source, CreatedTime, Code, ProductStatus, Production_AngleResult_Vertical, Production_AngleResult_LeftParallel, Production_AngleResult_RightParallel FROM op30_table WHERE Code LIKE @likeCode`;
+        const queryAuto = `SELECT 'Automation' as Source, CreatedTime, PartNumber as Code, IsOk as ProductStatus, GroupId FROM auto_line_table WHERE PartNumber LIKE @likeCode`;
+
+        const [resultOp10, resultOp20, resultOp30, resultAuto] = await Promise.all([
+            pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp10),
+            pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp20),
+            pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp30),
+            pool.request().input('likeCode', sql.VarChar, likeCode).query(queryAuto)
+        ]);
+        
+        // Combine results
+        const combined = [
+            ...resultOp10.recordset,
+            ...resultOp20.recordset,
+            ...resultOp30.recordset,
+            ...resultAuto.recordset.map(item => ({...item, ProductStatus: item.ProductStatus ? 1 : 2})) // Normalize IsOk (bit) to ProductStatus (int) 1=OK, 2=NG
+        ].sort((a, b) => new Date(b.CreatedTime) - new Date(a.CreatedTime));
+
+        res.json({
+            success: true,
+            data: combined,
+            total: combined.length
+        });
+
+    } catch (err) {
+        console.error('Error fetching traceability data:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch traceability data' });
+    }
 });
 
 module.exports = router;

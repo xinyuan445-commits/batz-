@@ -14,6 +14,7 @@ import Op10Table from './pages/Production';
 import Op20Table from './pages/Production/Op20Table';
 import Op30Table from './pages/Production/Op30Table';
 import AutomationTable from './pages/Production/AutomationTable';
+import TraceabilityTable from './pages/Production/TraceabilityTable';
 import BatzLogo from './assets/Batzlogo.jpg';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -23,6 +24,7 @@ const ProductionData = () => <Op10Table />;
 const Op20Data = () => <Op20Table />;
 const Op30Data = () => <Op30Table />;
 const AutomationData = () => <AutomationTable />;
+const TraceabilityData = () => <TraceabilityTable />;
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -118,6 +120,10 @@ const AdminLayout = ({ onLogout }) => {
                   path: '/production/automation',
                   name: '自动化注塑记录',
                 },
+                {
+                  path: '/production/traceability',
+                  name: '条码追溯查询',
+                },
               ],
             },
           ],
@@ -177,6 +183,7 @@ const AdminLayout = ({ onLogout }) => {
           <Route path="/production/op20" element={<Op20Data />} />
           <Route path="/production/op30" element={<Op30Data />} />
           <Route path="/production/automation" element={<AutomationData />} />
+          <Route path="/production/traceability" element={<TraceabilityData />} />
         </Routes>
       </ProLayout>
     </div>

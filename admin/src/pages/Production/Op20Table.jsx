@@ -15,14 +15,6 @@ const columns = [
     sorter: true,
     width: 180,
     render: (_, record) => dayjs(record.CreatedTime).format('YYYY-MM-DD HH:mm:ss'),
-    search: {
-      transform: (value) => {
-        return {
-          startTime: value[0],
-          endTime: value[1],
-        };
-      },
-    },
   },
   {
     title: '产品条码',
@@ -51,14 +43,14 @@ const columns = [
     dataIndex: 'PressPressure_Left',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.PressPressure_Left != null ? Number(record.PressPressure_Left).toFixed(2) : '-',
   },
   {
     title: '压装位移 左 (mm)',
     dataIndex: 'PressDisplacement_Left',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.PressDisplacement_Left != null ? Number(record.PressDisplacement_Left).toFixed(2) : '-',
   },
   {
     title: '压装结果 左',
@@ -76,14 +68,14 @@ const columns = [
     dataIndex: 'PressPressure_Right',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.PressPressure_Right != null ? Number(record.PressPressure_Right).toFixed(2) : '-',
   },
   {
     title: '压装位移 右 (mm)',
     dataIndex: 'PressDisplacement_Right',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.PressDisplacement_Right != null ? Number(record.PressDisplacement_Right).toFixed(2) : '-',
   },
   {
     title: '压装结果 右',
@@ -101,14 +93,14 @@ const columns = [
     dataIndex: 'PressPressure_Back',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.PressPressure_Back != null ? Number(record.PressPressure_Back).toFixed(2) : '-',
   },
   {
     title: '压装位移 后 (mm)',
     dataIndex: 'PressDisplacement_Back',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(2) : '-',
+    render: (_, record) => record.PressDisplacement_Back != null ? Number(record.PressDisplacement_Back).toFixed(2) : '-',
   },
   {
     title: '压装结果 后',
@@ -196,12 +188,26 @@ const Op20Table = () => {
         }}
         request={async (params, sort, filter) => {
           try {
+            // Check if date filter is applied. If not, default to current day
+            let startTime = params.CreatedTime?.[0];
+            let endTime = params.CreatedTime?.[1];
+
+            // If no date range is selected, default to today
+            if (!startTime && !endTime) {
+               startTime = dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+               endTime = dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            } else {
+               // If date range is selected, format it properly
+               startTime = dayjs(startTime).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+               endTime = dayjs(endTime).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            }
+
             const response = await axios.get('http://localhost:3001/api/admin/production/op20', {
               params: {
                 current: params.current,
                 pageSize: params.pageSize,
-                startTime: params.CreatedTime?.[0], 
-                endTime: params.CreatedTime?.[1],
+                startTime: startTime, 
+                endTime: endTime,
                 status: params.ProductStatus,
               },
             });
@@ -219,6 +225,12 @@ const Op20Table = () => {
               total: 0,
             };
           }
+        }}
+        form={{
+          // Set initial values for the search form to show today's date by default
+          initialValues: {
+            CreatedTime: [dayjs().startOf('day'), dayjs().endOf('day')],
+          },
         }}
         columns={columns}
         dateFormatter="string"

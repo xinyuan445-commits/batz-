@@ -15,14 +15,6 @@ const columns = [
     sorter: true,
     width: 180,
     render: (_, record) => dayjs(record.CreatedTime).format('YYYY-MM-DD HH:mm:ss'),
-    search: {
-      transform: (value) => {
-        return {
-          startTime: value[0],
-          endTime: value[1],
-        };
-      },
-    },
   },
   {
     title: '产品条码',
@@ -51,28 +43,42 @@ const columns = [
     dataIndex: 'Production_Circle1_Diameter',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(3) : '-',
+    render: (_, record) => record.Production_Circle1_Diameter != null ? Number(record.Production_Circle1_Diameter).toFixed(3) : '-',
   },
   {
     title: '直径2 (mm)',
     dataIndex: 'Production_Circle2_Diameter',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(3) : '-',
+    render: (_, record) => record.Production_Circle2_Diameter != null ? Number(record.Production_Circle2_Diameter).toFixed(3) : '-',
   },
   {
     title: '直径3 (mm)',
     dataIndex: 'Production_Circle3_Diameter',
     valueType: 'digit',
     search: false,
-    render: (val) => val ? Number(val).toFixed(3) : '-',
+    render: (_, record) => record.Production_Circle3_Diameter != null ? Number(record.Production_Circle3_Diameter).toFixed(3) : '-',
   },
   {
     title: '圆心距1 (mm)',
     dataIndex: 'Production_CenterDist1',
     valueType: 'digit',
     search: false,
-    hideInTable: true, // Hide by default to save space
+    render: (_, record) => record.Production_CenterDist1 != null ? Number(record.Production_CenterDist1).toFixed(3) : '-',
+  },
+  {
+    title: '圆心距2 (mm)',
+    dataIndex: 'Production_CenterDist2',
+    valueType: 'digit',
+    search: false,
+    render: (_, record) => record.Production_CenterDist2 != null ? Number(record.Production_CenterDist2).toFixed(3) : '-',
+  },
+  {
+    title: '圆心距3 (mm)',
+    dataIndex: 'Production_CenterDist3',
+    valueType: 'digit',
+    search: false,
+    render: (_, record) => record.Production_CenterDist3 != null ? Number(record.Production_CenterDist3).toFixed(3) : '-',
   },
   {
     title: '视觉结果',
@@ -173,12 +179,27 @@ const Op10Table = () => {
         }}
         request={async (params, sort, filter) => {
           try {
+            // Check if date filter is applied. If not, default to current day
+            let startTime = params.CreatedTime?.[0];
+            let endTime = params.CreatedTime?.[1];
+
+            // If no date range is selected, default to today
+            if (!startTime && !endTime) {
+               startTime = dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+               endTime = dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            } else {
+               // If date range is selected, format it properly
+               // Ensure we cover the full range from start of first day to end of last day
+               startTime = dayjs(startTime).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+               endTime = dayjs(endTime).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            }
+
             const response = await axios.get('http://localhost:3001/api/admin/production/op10', {
               params: {
                 current: params.current,
                 pageSize: params.pageSize,
-                startTime: params.CreatedTime?.[0], // Antd ProTable passes date range array
-                endTime: params.CreatedTime?.[1],
+                startTime: startTime, 
+                endTime: endTime,
                 status: params.ProductStatus, // 传递状态查询参数
               },
             });
@@ -196,6 +217,12 @@ const Op10Table = () => {
               total: 0,
             };
           }
+        }}
+        form={{
+          // Set initial values for the search form to show today's date by default
+          initialValues: {
+            CreatedTime: [dayjs().startOf('day'), dayjs().endOf('day')],
+          },
         }}
         columns={columns}
         dateFormatter="string"
