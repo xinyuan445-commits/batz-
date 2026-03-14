@@ -12,6 +12,8 @@ import {
 import Login from './pages/Login';
 import Op10Table from './pages/Production';
 import Op20Table from './pages/Production/Op20Table';
+import Op30Table from './pages/Production/Op30Table';
+import AutomationTable from './pages/Production/AutomationTable';
 import BatzLogo from './assets/Batzlogo.jpg';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -19,6 +21,8 @@ const { Header, Content, Footer, Sider } = Layout;
 // Placeholder components
 const ProductionData = () => <Op10Table />;
 const Op20Data = () => <Op20Table />;
+const Op30Data = () => <Op30Table />;
+const AutomationData = () => <AutomationTable />;
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -106,6 +110,14 @@ const AdminLayout = ({ onLogout }) => {
                   path: '/production/op20',
                   name: 'OP20 压装记录',
                 },
+                {
+                  path: '/production/op30',
+                  name: 'OP30 角度检测',
+                },
+                {
+                  path: '/production/automation',
+                  name: '自动化注塑记录',
+                },
               ],
             },
           ],
@@ -163,6 +175,8 @@ const AdminLayout = ({ onLogout }) => {
           <Route path="/production" element={<Navigate to="/production/op10" replace />} />
           <Route path="/production/op10" element={<ProductionData />} />
           <Route path="/production/op20" element={<Op20Data />} />
+          <Route path="/production/op30" element={<Op30Data />} />
+          <Route path="/production/automation" element={<AutomationData />} />
         </Routes>
       </ProLayout>
     </div>

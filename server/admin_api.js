@@ -42,6 +42,62 @@ const buildOp20Query = (whereClause) => `
     ORDER BY CreatedTime DESC
 `;
 
+// Helper for OP30 query
+const buildOp30Query = (whereClause) => `
+    SELECT 
+        CreatedTime,
+        Code,
+        ProductStatus,
+        Production_AngleResult_Vertical,
+        Production_AngleResult_LeftParallel,
+        Production_AngleResult_RightParallel,
+        Production_Angle_Vertical,
+        Production_Angle_LeftParallel,
+        Production_Angle_RightParallel
+    FROM op30_table
+    ${whereClause}
+    ORDER BY CreatedTime DESC
+`;
+
+// Helper for Automation query
+const buildAutomationQuery = (whereClause) => `
+    SELECT 
+        CreatedTime,
+        GroupId,
+        PartNumber,
+        IsOk,
+        IsPrinted,
+        tmCycleTime,
+        tmClpClsTime,
+        tmInjTime,
+        tmTurnTime,
+        tmChargeTime,
+        tmClpOpnTime,
+        tmInjBackTime,
+        tmEjectTime,
+        tmFetchTime,
+        tmCoolingTime,
+        tmClpOpnPosi,
+        tmInjStartPosi,
+        tmInjEndPosi,
+        tmTurnPosi,
+        tmTurnPress,
+        tmInjMaxPress,
+        tmChargeMaxPress,
+        tmTemp1_Current,
+        tmTemp2_Current,
+        tmTemp3_Current,
+        tmTemp4_Current,
+        tmTemp5_Current,
+        tmTemp6_Current,
+        tmTemp7_Current,
+        tmTemp8_Current,
+        tmTemp9_Current
+    FROM auto_line_table
+    ${whereClause}
+    ORDER BY CreatedTime DESC
+`;
+
 // Generic function to handle paginated requests
 const handlePaginatedRequest = async (req, res, tableName, queryBuilder) => {
     try {
@@ -61,12 +117,28 @@ const handlePaginatedRequest = async (req, res, tableName, queryBuilder) => {
             request.input('endTime', sql.VarChar, endTime);
         }
         if (code) {
-            whereClause += " AND Code LIKE @code";
+            // Check if column exists or use generic approach
+            // For automation table, the code column is PartNumber
+            if (tableName === 'auto_line_table') {
+                whereClause += " AND PartNumber LIKE @code";
+            } else {
+                whereClause += " AND Code LIKE @code";
+            }
             request.input('code', sql.VarChar, `%${code}%`);
         }
         if (status) {
-            whereClause += " AND ProductStatus = @status";
-            request.input('status', sql.Int, parseInt(status));
+            // For automation table, status column is IsOk (BIT), for others it's ProductStatus (INT)
+            if (tableName === 'auto_line_table') {
+                whereClause += " AND IsOk = @status";
+                // Convert status 1/2 to 1/0 for BIT
+                // Assuming frontend sends 1 for OK, 2 for NG like other tables
+                // But IsOk is BIT: 1=OK, 0=NG
+                const bitStatus = parseInt(status) === 1 ? 1 : 0;
+                request.input('status', sql.Bit, bitStatus);
+            } else {
+                whereClause += " AND ProductStatus = @status";
+                request.input('status', sql.Int, parseInt(status));
+            }
         }
 
         // 1. Get Total Count
@@ -112,6 +184,16 @@ router.get('/production/op10', async (req, res) => {
 // OP20 Production Data API
 router.get('/production/op20', async (req, res) => {
     await handlePaginatedRequest(req, res, 'op20_table', buildOp20Query);
+});
+
+// OP30 Production Data API
+router.get('/production/op30', async (req, res) => {
+    await handlePaginatedRequest(req, res, 'op30_table', buildOp30Query);
+});
+
+// Automation Data API
+router.get('/production/automation', async (req, res) => {
+    await handlePaginatedRequest(req, res, 'auto_line_table', buildAutomationQuery);
 });
 
 module.exports = router;
