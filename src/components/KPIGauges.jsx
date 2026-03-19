@@ -13,12 +13,18 @@ const KPIGauges = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [injectionRes, op40Res] = await Promise.all([
+        const [injectionRes, op10Res, op20Res, op30Res, op40Res] = await Promise.all([
             fetch('/api/injection'),
+            fetch('/api/op10/all'),
+            fetch('/api/op20/all'),
+            fetch('/api/op30/all'),
             fetch('/api/op40')
         ]);
         
         const injectionData = await injectionRes.json();
+        const op10Data = await op10Res.json();
+        const op20Data = await op20Res.json();
+        const op30Data = await op30Res.json();
         const op40Data = await op40Res.json();
         
         if (!Array.isArray(injectionData)) return;
@@ -30,21 +36,68 @@ const KPIGauges = () => {
             isInCurrentShift(d.CreatedTime, shiftStart, shiftEnd)
         );
         
+        const shiftOp10Data = Array.isArray(op10Data) ? op10Data.filter(d => 
+            isInCurrentShift(d.CreatedTime, shiftStart, shiftEnd)
+        ) : [];
+
+        const shiftOp20Data = Array.isArray(op20Data) ? op20Data.filter(d => 
+            isInCurrentShift(d.CreatedTime, shiftStart, shiftEnd)
+        ) : [];
+
+        const shiftOp30Data = Array.isArray(op30Data) ? op30Data.filter(d => 
+            isInCurrentShift(d.CreatedTime, shiftStart, shiftEnd)
+        ) : [];
+
         const shiftOp40Data = Array.isArray(op40Data) ? op40Data.filter(d => 
             isInCurrentShift(d.CreatedTime, shiftStart, shiftEnd)
         ) : [];
 
-        // Calculate Metrics based on Shift Data
-        // Total Count: From Injection Data (shiftInjectionData)
-        // OK Count: From OP40 Data (shiftOp40Data) - Represents packed/final good products
-        const totalCount = shiftInjectionData.length;
-        const okCount = shiftOp40Data.length;
+        // OP40 Total Count
+        const op40Count = shiftOp40Data.length;
+
+        // Total Count: From OP40 Data (Current Shift)
+        const totalCount = op40Count;
         
-        // Yield Rate = (OK Count from OP40 / Total Count from Injection) * 100
-        const okRate = totalCount > 0 ? Number(((okCount / totalCount) * 100).toFixed(1)) : 0;
+        // Calculate Total NG Count from OP10, OP20, OP30 (Original Real Data)
+        const op10NgCount = shiftOp10Data.filter(d => d.ProductStatus !== 1 && d.ProductStatus !== '1').length;
+        const op20NgCount = shiftOp20Data.filter(d => d.ProductStatus !== 1 && d.ProductStatus !== '1').length;
+        const op30NgCount = shiftOp30Data.filter(d => d.ProductStatus !== 1 && d.ProductStatus !== '1').length;
         
-        // OEE (Currently using yield rate as a placeholder)
-        const oee = okRate;
+        const realTotalNgCount = op10NgCount + op20NgCount + op30NgCount;
+        
+        // OP10 Total Input Count (used as denominator for NG Rate)
+        const op10InputCount = shiftOp10Data.length;
+        
+        // Calculate Yield Rate (okRate) with Temporary Adjustments: 
+        // Base 100, but subtract a random integer between 1 and 3 to get [97, 98, 99]
+        let okRate = 0;
+        if (op10InputCount > 0) {
+            // 生成伪随机种子：只依赖于 op10InputCount，并且每投入 3 个产品才变化一次 (Math.floor(op10InputCount / 3))
+            // 这样既保证了只有 op10 变化才变化，又实现了“隔几次变下”的要求
+            const seed = Math.floor(op10InputCount / 3);
+            const pseudoRandom = Math.abs(Math.sin(seed));
+            
+            // Random fluctuation: -1, -2, or -3
+            // pseudoRandom is [0, 1) -> * 3 is [0, 3) -> floor is 0, 1, or 2 -> +1 is 1, 2, or 3
+            const deduction = Math.floor(pseudoRandom * 3) + 1; 
+            
+            // Base target is 100, subtract deduction
+            okRate = 100 - deduction;
+            
+            // Clamp just in case
+            if (okRate > 100) okRate = 100;
+            if (okRate < 0) okRate = 0;
+        } else if (totalCount > 0) {
+            okRate = 99; // Default safe integer value if injection has data but op10 doesn't
+        }
+        
+        // Calculate OEE: OP40 Count / OP10 Input Count
+        let oee = 0;
+        if (op10InputCount > 0) {
+            oee = Number(((op40Count / op10InputCount) * 100).toFixed(1));
+            // Clamp to 100% max in case op40 somehow has more records than op10
+            if (oee > 100) oee = 100;
+        }
 
         setMetrics({
             totalCount,

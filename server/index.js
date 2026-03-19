@@ -60,6 +60,7 @@ app.get('/api/op10', async (req, res) => {
                 IsShielded
             FROM op10_table
             WHERE Code != 'TESLRBDXNM1'
+              AND Code != 'P1673627-00-D:SCHC26075113845'
             ORDER BY CreatedTime DESC
         `);
         res.json(result.recordset);
@@ -111,6 +112,7 @@ app.get('/api/op30', async (req, res) => {
                 IsShielded
             FROM op30_table
             WHERE Code != 'TESLRBDXNM2'
+              AND Code != 'P1673627-00-D:SCHC26075140601'
             ORDER BY CreatedTime DESC
         `);
         res.json(result.recordset);
@@ -256,6 +258,67 @@ app.get('/api/op30/calibration-status', async (req, res) => {
 });
 
 // OP40 Data API - For Packaging Station Count
+app.get('/api/op10/all', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT 
+                CreatedTime,
+                Code,
+                ProductStatus
+            FROM op10_table
+            WHERE Code != 'TESLRBDXNM1'
+              AND Code != 'P1673627-00-D:SCHC26075113845'
+              AND CreatedTime >= DATEADD(hour, -24, GETDATE())
+            ORDER BY CreatedTime DESC
+        `);
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Error fetching OP10 all data:', err);
+        res.status(500).json({ error: 'Failed to fetch OP10 all data' });
+    }
+});
+
+app.get('/api/op20/all', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT 
+                CreatedTime,
+                Code,
+                ProductStatus
+            FROM op20_table
+            WHERE CreatedTime >= DATEADD(hour, -24, GETDATE())
+            ORDER BY CreatedTime DESC
+        `);
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Error fetching OP20 all data:', err);
+        res.status(500).json({ error: 'Failed to fetch OP20 all data' });
+    }
+});
+
+app.get('/api/op30/all', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT 
+                CreatedTime,
+                Code,
+                ProductStatus
+            FROM op30_table
+            WHERE Code != 'TESLRBDXNM2'
+              AND Code != 'P1673627-00-D:SCHC26075140601'
+              AND CreatedTime >= DATEADD(hour, -24, GETDATE())
+            ORDER BY CreatedTime DESC
+        `);
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Error fetching OP30 all data:', err);
+        res.status(500).json({ error: 'Failed to fetch OP30 all data' });
+    }
+});
+
 app.get('/api/op40', async (req, res) => {
     try {
         const pool = await poolPromise;

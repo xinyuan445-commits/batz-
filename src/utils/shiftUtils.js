@@ -47,9 +47,9 @@ export const getShiftRange = (now = new Date()) => {
  */
 export const parseDbTime = (timeStr) => {
     if (!timeStr) return new Date();
-    // Fix timezone issue: strip 'Z' to force local time interpretation
-    const cleanStr = timeStr.endsWith('Z') ? timeStr.slice(0, -1) : timeStr;
-    return new Date(cleanStr);
+    // Since backend config uses useUTC: false, the database time is properly converted to the server's local time,
+    // and serialized as a correct UTC ISO string in JSON. We can just parse it directly.
+    return new Date(timeStr);
 };
 
 /**

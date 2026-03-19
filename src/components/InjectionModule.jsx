@@ -15,8 +15,7 @@ const InjectionModule = () => {
   
   const [chartData, setChartData] = useState({
     hours: [],
-    yields: [],
-    oees: []
+    yields: []
   });
 
   useEffect(() => {
@@ -116,15 +115,10 @@ const InjectionModule = () => {
         });
         
         const yields = shiftHours.map(h => hourlyData[h].total);
-        const oees = shiftHours.map(h => {
-            const { total, ok } = hourlyData[h];
-            return total > 0 ? Math.round((ok / total) * 100) : 0;
-        });
 
         setChartData({
             hours: shiftHours,
-            yields,
-            oees
+            yields
         });
 
       } catch (error) {
@@ -139,14 +133,14 @@ const InjectionModule = () => {
 
   const chartOption = {
     title: {
-        text: '每小时产量 (联动OEE)',
+        text: '每小时产量',
         textStyle: { color: '#94a3b8', fontSize: 26, fontFamily: 'Rajdhani' },
         left: 'center',
         top: 10
     },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'cross' },
+      axisPointer: { type: 'shadow' },
       backgroundColor: 'rgba(11, 17, 33, 0.9)',
       borderColor: '#3b82f6',
       textStyle: { color: '#fff' }
@@ -177,15 +171,6 @@ const InjectionModule = () => {
         axisLabel: { formatter: '{value}', color: '#94a3b8', fontSize: 22, fontFamily: 'Rajdhani' },
         axisLine: { show: false },
         splitLine: { lineStyle: { color: '#334155', type: 'dashed', opacity: 0.3 } }
-      },
-      {
-        type: 'value',
-        name: 'OEE',
-        min: 0,
-        max: 100,
-        interval: 20,
-        axisLabel: { formatter: '{value} %', color: '#94a3b8', fontSize: 22, fontFamily: 'Rajdhani' },
-        splitLine: { show: false }
       }
     ],
     series: [
@@ -223,21 +208,6 @@ const InjectionModule = () => {
                 }
             ]
         }
-      },
-      {
-        name: 'OEE',
-        type: 'line',
-        yAxisIndex: 1,
-        itemStyle: { color: '#22c55e' },
-        lineStyle: { 
-            width: 3,
-            shadowColor: 'rgba(34, 197, 94, 0.5)',
-            shadowBlur: 10
-        },
-        smooth: true,
-        symbol: 'circle',
-        symbolSize: 6,
-        data: chartData.oees.length > 0 ? chartData.oees : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       }
     ]
   };
