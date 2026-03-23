@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 const { sql, poolPromise } = require('./db_config');
 const adminRoutes = require('./admin_api'); // Import Admin API
 require('dotenv').config();
@@ -10,6 +12,46 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// --- Dashboard Config API ---
+const configPath = path.join(__dirname, 'dashboard_config.json');
+
+const defaultConfig = {
+    production: { target: 1404, max: 1600 },
+    yieldRate: { target: 98, max: 100 },
+    oee: { target: 90, max: 100 }
+};
+
+app.get('/api/config/kpi', (req, res) => {
+    try {
+        if (fs.existsSync(configPath)) {
+            const data = fs.readFileSync(configPath, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            // Default config if file doesn't exist
+            res.json(defaultConfig);
+        }
+    } catch (err) {
+        console.error('Error reading config:', err);
+        res.status(500).json({ error: 'Failed to read config' });
+    }
+});
+
+app.get('/api/config/kpi/default', (req, res) => {
+    res.json(defaultConfig);
+});
+
+app.post('/api/admin/config/kpi', (req, res) => {
+    try {
+        const newConfig = req.body;
+        fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2), 'utf8');
+        res.json({ success: true, message: 'Configuration saved successfully' });
+    } catch (err) {
+        console.error('Error saving config:', err);
+        res.status(500).json({ error: 'Failed to save config' });
+    }
+});
+// -----------------------------
 
 // Register Admin Routes
 app.use('/api/admin', adminRoutes);

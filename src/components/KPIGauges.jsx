@@ -10,15 +10,22 @@ const KPIGauges = () => {
     oee: 0 // Placeholder for OEE, currently using yield rate or can be a separate calculation
   });
 
+  const [config, setConfig] = useState({
+    production: { target: 1404, max: 1600 },
+    yieldRate: { target: 98, max: 100 },
+    oee: { target: 90, max: 100 }
+  });
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [injectionRes, op10Res, op20Res, op30Res, op40Res] = await Promise.all([
+        const [injectionRes, op10Res, op20Res, op30Res, op40Res, configRes] = await Promise.all([
             fetch('/api/injection'),
             fetch('/api/op10/all'),
             fetch('/api/op20/all'),
             fetch('/api/op30/all'),
-            fetch('/api/op40')
+            fetch('/api/op40'),
+            fetch('/api/config/kpi')
         ]);
         
         const injectionData = await injectionRes.json();
@@ -26,6 +33,11 @@ const KPIGauges = () => {
         const op20Data = await op20Res.json();
         const op30Data = await op30Res.json();
         const op40Data = await op40Res.json();
+        const configData = await configRes.json();
+        
+        if (configData) {
+            setConfig(configData);
+        }
         
         if (!Array.isArray(injectionData)) return;
 
@@ -115,8 +127,7 @@ const KPIGauges = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const getGaugeOption = (value, name, unit, color, target) => {
-    const max = name === '产 量' ? 1600 : 100;
+  const getGaugeOption = (value, name, unit, color, target, max) => {
     const min = 0; 
     
     // Calculate position for target label
@@ -238,7 +249,7 @@ const KPIGauges = () => {
             <Title text="产 量" />
             <div className="flex-1 w-full min-h-0 relative z-10">
                 <ReactECharts 
-                    option={getGaugeOption(metrics.totalCount, '产 量', 'pcs', '#3b82f6', 1404)} 
+                    option={getGaugeOption(metrics.totalCount, '产 量', 'pcs', '#3b82f6', config.production.target, config.production.max)} 
                     style={{ height: '100%', width: '100%' }} 
                 />
             </div>
@@ -248,7 +259,7 @@ const KPIGauges = () => {
             <Title text="合 格 率" />
             <div className="flex-1 w-full min-h-0 relative z-10">
                 <ReactECharts 
-                    option={getGaugeOption(metrics.okRate, '合 格 率', '%', '#22c55e', 98)} 
+                    option={getGaugeOption(metrics.okRate, '合 格 率', '%', '#22c55e', config.yieldRate.target, config.yieldRate.max)} 
                     style={{ height: '100%', width: '100%' }} 
                 />
             </div>
@@ -258,7 +269,7 @@ const KPIGauges = () => {
             <Title text="OEE" />
             <div className="flex-1 w-full min-h-0 relative z-10">
                 <ReactECharts 
-                    option={getGaugeOption(metrics.oee, 'OEE', '%', '#f59e0b', 90)} 
+                    option={getGaugeOption(metrics.oee, 'OEE', '%', '#f59e0b', config.oee.target, config.oee.max)} 
                     style={{ height: '100%', width: '100%' }} 
                 />
             </div>

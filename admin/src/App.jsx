@@ -15,6 +15,7 @@ import Op20Table from './pages/Production/Op20Table';
 import Op30Table from './pages/Production/Op30Table';
 import AutomationTable from './pages/Production/AutomationTable';
 import TraceabilityTable from './pages/Production/TraceabilityTable';
+import DashboardConfig from './pages/Config/index';
 import BatzLogo from './assets/Batzlogo.jpg';
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -126,6 +127,11 @@ const AdminLayout = ({ onLogout }) => {
                 },
               ],
             },
+            {
+              path: '/config',
+              name: '大屏配置',
+              icon: <SettingOutlined />,
+            },
           ],
         }}
         menuItemRender={(item, dom) => (
@@ -184,6 +190,7 @@ const AdminLayout = ({ onLogout }) => {
           <Route path="/production/op30" element={<Op30Data />} />
           <Route path="/production/automation" element={<AutomationData />} />
           <Route path="/production/traceability" element={<TraceabilityData />} />
+          <Route path="/config" element={<DashboardConfig />} />
         </Routes>
       </ProLayout>
     </div>

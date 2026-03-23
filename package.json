@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\" \"npm run admin\"",
+    "dev": "concurrently \"npm run server\" \"npm run client\" \"npm run admin\" \"npm run open\"",
+    "open": "node scripts/open-browsers.js",
     "client": "vite",
     "admin": "npm run dev --prefix admin",
     "server": "node server/index.js",
