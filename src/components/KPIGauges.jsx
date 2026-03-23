@@ -217,18 +217,7 @@ const KPIGauges = () => {
           },
 
          detail: {
-             show: true,
-             offsetCenter: [`${x}%`, `${y}%`],
-             formatter: () => `Target: ${target}${name === '产 量' ? '' : '%'}`,
-             color: '#94a3b8',
-             fontSize: 30,
-             fontWeight: 'bold',
-             fontFamily: 'Rajdhani',
-             backgroundColor: 'rgba(0,0,0,0.5)',
-             borderRadius: 8,
-             padding: [10, 36],
-             borderWidth: 1,
-             borderColor: '#94a3b8'
+             show: false // We will hide the built-in detail and use a custom Title component instead
          },
          data: [{ value: 0 }] // Dummy data to trigger render
        } : null
@@ -236,17 +225,35 @@ const KPIGauges = () => {
   };
 };
 
-  const Title = ({ text }) => (
-    <div className="absolute top-2 left-4 z-0">
-        <span style={{ fontSize: '39px', fontFamily: 'Rajdhani', fontWeight: 'bold', color: '#94a3b8' }}>{text}</span>
-    </div>
+  const Title = ({ text, target }) => (
+    <>
+      <div className="absolute top-2 left-4 z-0">
+          <span style={{ fontSize: '39px', fontFamily: 'Rajdhani', fontWeight: 'bold', color: '#94a3b8' }}>{text}</span>
+      </div>
+      {target && (
+        <div className="absolute top-4 right-4 z-10">
+            <div style={{
+                color: '#94a3b8',
+                fontSize: '30px',
+                fontWeight: 'bold',
+                fontFamily: 'Rajdhani',
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                borderRadius: '8px',
+                padding: '10px 36px',
+                border: '1px solid #94a3b8'
+            }}>
+                Target: {target}{text === '产 量' ? '' : '%'}
+            </div>
+        </div>
+      )}
+    </>
   );
 
   return (
     <div className="grid grid-cols-3 gap-4 h-full">
         {/* Production Volume */}
         <div className="tech-card p-2 relative flex flex-col hover:shadow-glow-blue transition-all duration-300">
-            <Title text="产 量" />
+            <Title text="产 量" target={config.production.target} />
             <div className="flex-1 w-full min-h-0 relative z-10">
                 <ReactECharts 
                     option={getGaugeOption(metrics.totalCount, '产 量', 'pcs', '#3b82f6', config.production.target, config.production.max)} 
@@ -256,7 +263,7 @@ const KPIGauges = () => {
         </div>
         {/* Yield Rate */}
         <div className="tech-card p-2 relative flex flex-col hover:shadow-glow-green transition-all duration-300">
-            <Title text="合 格 率" />
+            <Title text="合 格 率" target={config.yieldRate.target} />
             <div className="flex-1 w-full min-h-0 relative z-10">
                 <ReactECharts 
                     option={getGaugeOption(metrics.okRate, '合 格 率', '%', '#22c55e', config.yieldRate.target, config.yieldRate.max)} 
@@ -266,7 +273,7 @@ const KPIGauges = () => {
         </div>
         {/* OEE */}
         <div className="tech-card p-2 relative flex flex-col hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-all duration-300">
-            <Title text="OEE" />
+            <Title text="OEE" target={config.oee.target} />
             <div className="flex-1 w-full min-h-0 relative z-10">
                 <ReactECharts 
                     option={getGaugeOption(metrics.oee, 'OEE', '%', '#f59e0b', config.oee.target, config.oee.max)} 

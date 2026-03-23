@@ -6,17 +6,17 @@ console.log('⏳ Waiting for servers to start before opening browsers...');
 setTimeout(() => {
   console.log('🌐 Opening browsers...');
 
-  // Open Client (Dashboard) in Chrome in Fullscreen/Kiosk mode
+  // Open Client (Dashboard) in Chrome in Fullscreen mode (allows exiting with F11)
   const clientUrl = 'http://localhost:5566';
   // Use PowerShell Start-Process to avoid some environment restrictions
-  exec(`powershell -Command "Start-Process chrome -ArgumentList '--kiosk ${clientUrl}'"`, (error) => {
+  exec(`powershell -Command "Start-Process chrome -ArgumentList '--start-fullscreen ${clientUrl}'"`, (error) => {
     if (error) {
       console.log('⚠️ Failed to open Chrome via powershell. Trying cmd start...');
-      exec(`start chrome --kiosk "${clientUrl}"`, (err2) => {
+      exec(`start chrome --start-fullscreen "${clientUrl}"`, (err2) => {
           if(err2) console.error('Error:', err2);
       }); 
     } else {
-      console.log(`✅ Opened Dashboard in Chrome (Kiosk Mode) at ${clientUrl}`);
+      console.log(`✅ Opened Dashboard in Chrome (Fullscreen Mode) at ${clientUrl}`);
     }
   });
 

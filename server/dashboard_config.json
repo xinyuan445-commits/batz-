@@ -1,5 +1,14 @@
 {
-  "production": { "target": 1404, "max": 1600 },
-  "yieldRate": { "target": 98, "max": 100 },
-  "oee": { "target": 90, "max": 100 }
+  "production": {
+    "target": 50,
+    "max": 50
+  },
+  "yieldRate": {
+    "target": 50,
+    "max": 100
+  },
+  "oee": {
+    "target": 50,
+    "max": 50
+  }
 }
