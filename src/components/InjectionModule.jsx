@@ -21,7 +21,11 @@ const InjectionModule = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/injection');
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? `http://${window.location.hostname}:3001` 
+            : '';
+            
+        const response = await fetch(`${baseUrl}/api/injection`);
         const data = await response.json();
         
         if (!Array.isArray(data)) return;

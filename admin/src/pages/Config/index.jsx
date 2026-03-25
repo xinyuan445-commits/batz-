@@ -14,8 +14,13 @@ const DashboardConfig = () => {
   const fetchConfig = async () => {
     setLoading(true);
     try {
-      // The proxy in vite config redirects /api to backend
-      const response = await axios.get('/api/config/kpi');
+      // In production (packaged exe), admin runs on 5173 but API is on 3001
+      // We need to explicitly point to the API port, or use the proxy in dev
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? `http://${window.location.hostname}:3001/api/config/kpi`
+        : '/api/config/kpi';
+        
+      const response = await axios.get(apiUrl);
       if (response.data) {
         form.setFieldsValue(response.data);
       }
@@ -35,7 +40,11 @@ const DashboardConfig = () => {
   const onFinish = async (values) => {
     setSaving(true);
     try {
-      await axios.post('/api/admin/config/kpi', values);
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? `http://${window.location.hostname}:3001/api/admin/config/kpi`
+        : '/api/admin/config/kpi';
+        
+      await axios.post(apiUrl, values);
       message.success('配置保存成功！大屏数据将在下一次刷新时应用新配置。');
     } catch (error) {
       console.error('Failed to save config:', error);
@@ -131,7 +140,10 @@ const DashboardConfig = () => {
               <Button 
                 onClick={async () => {
                   try {
-                    const res = await axios.get('/api/config/kpi/default');
+                    const apiUrl = process.env.NODE_ENV === 'production' 
+                      ? `http://${window.location.hostname}:3001/api/config/kpi/default`
+                      : '/api/config/kpi/default';
+                    const res = await axios.get(apiUrl);
                     form.setFieldsValue(res.data);
                     message.success('已加载系统默认配置，请点击【保存配置】以生效');
                   } catch(e) {

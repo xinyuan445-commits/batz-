@@ -13,10 +13,14 @@ const QualityModule = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? `http://${window.location.hostname}:3001` 
+            : '';
+
         const [op10Res, op20Res, op30Res] = await Promise.all([
-            fetch('/api/op10/all'),
-            fetch('/api/op20/all'),
-            fetch('/api/op30/all')
+            fetch(`${baseUrl}/api/op10/all`),
+            fetch(`${baseUrl}/api/op20/all`),
+            fetch(`${baseUrl}/api/op30/all`)
         ]);
         
         const op10Data = await op10Res.json();

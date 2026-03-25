@@ -19,13 +19,17 @@ const KPIGauges = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? `http://${window.location.hostname}:3001` 
+            : '';
+
         const [injectionRes, op10Res, op20Res, op30Res, op40Res, configRes] = await Promise.all([
-            fetch('/api/injection'),
-            fetch('/api/op10/all'),
-            fetch('/api/op20/all'),
-            fetch('/api/op30/all'),
-            fetch('/api/op40'),
-            fetch('/api/config/kpi')
+            fetch(`${baseUrl}/api/injection`),
+            fetch(`${baseUrl}/api/op10/all`),
+            fetch(`${baseUrl}/api/op20/all`),
+            fetch(`${baseUrl}/api/op30/all`),
+            fetch(`${baseUrl}/api/op40`),
+            fetch(`${baseUrl}/api/config/kpi`)
         ]);
         
         const injectionData = await injectionRes.json();

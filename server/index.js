@@ -2,19 +2,84 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
+
+// Keep window open on crash for debugging in executable
+process.on('uncaughtException', (err) => {
+    console.error('\n❌ FATAL ERROR:', err);
+    console.log('\n[Press Ctrl+C to exit]');
+    setInterval(() => {}, 1000); // Keep alive
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n❌ UNHANDLED REJECTION:', reason);
+    console.log('\n[Press Ctrl+C to exit]');
+    setInterval(() => {}, 1000); // Keep alive
+});
+
 const { sql, poolPromise } = require('./db_config');
 const adminRoutes = require('./admin_api'); // Import Admin API
-require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+// Enable CORS for all origins and methods to avoid cross-port issues between 5566, 5173, and 3001
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
+// ==========================================
+// License Expiration Check Logic
+// ==========================================
+// Set the expiration date here (Format: YYYY-MM-DD)
+// For example, if the balance is due by April 30, 2026, set it to '2026-04-30'.
+// Once this date is passed, the APIs will return a 403 Forbidden error.
+const LICENSE_EXPIRATION_DATE = '2026-04-30'; // <-- 修改这里的日期来控制什么时候停用
+
+const isLicenseExpired = () => {
+    if (!LICENSE_EXPIRATION_DATE) return false;
+    const expirationDate = new Date(LICENSE_EXPIRATION_DATE);
+    const currentDate = new Date();
+    // Compare dates
+    return currentDate > expirationDate;
+};
+
+// License Check Middleware
+const licenseCheckMiddleware = (req, res, next) => {
+    if (isLicenseExpired()) {
+        // If expired, return a JSON error that the frontend will eventually catch, 
+        // causing the dashboard to show empty/error states and preventing backend use.
+        return res.status(403).json({ 
+            error: 'SYSTEM_LOCKED', 
+            message: '系统授权已过期，请联系供应商完成尾款结算以恢复使用。' 
+        });
+    }
+    next();
+};
+// ==========================================
+
+// Apply License Check to ALL routes globally
+app.use(licenseCheckMiddleware);
+
 // --- Dashboard Config API ---
-const configPath = path.join(__dirname, 'dashboard_config.json');
+// Support both development and pkg executable environments for config
+const exeDir = path.dirname(process.execPath);
+let configPath = path.resolve(exeDir, 'dashboard_config.json');
+
+if (!fs.existsSync(configPath)) {
+    configPath = path.resolve(process.cwd(), 'dashboard_config.json');
+    if (!fs.existsSync(configPath)) {
+        // Fallback to server directory in development
+        configPath = path.resolve(__dirname, 'dashboard_config.json');
+        if(!fs.existsSync(configPath)) {
+            configPath = path.resolve(exeDir, 'dashboard_config.json'); // Always write to exe folder
+        }
+    }
+}
 
 const defaultConfig = {
     production: { target: 1404, max: 1600 },
@@ -61,8 +126,82 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date() });
 });
 
+// ==========================================
+// Static File Hosting (Production Delivery on Separate Ports)
+// ==========================================
+// In production (.exe), we spin up two additional express servers for the frontends
+// to match the original dev environment ports.
+// process.execPath is the path to the .exe itself, ensuring we look next to the .exe
+const exeDirStatic = path.dirname(process.execPath);
+let clientDistPath = path.resolve(exeDirStatic, 'dist');
+
+if (!fs.existsSync(clientDistPath)) {
+    clientDistPath = path.resolve(process.cwd(), 'dist'); // Fallback to cwd
+}
+
+if (fs.existsSync(clientDistPath)) {
+    const clientApp = express();
+    clientApp.use(express.static(clientDistPath));
+    clientApp.listen(5566, () => {
+        console.log(`✅ Dashboard UI server is running on port 5566 (Serving from: ${clientDistPath})`);
+    });
+} else {
+    console.log(`⚠️  Warning: Dashboard UI files not found at ${clientDistPath}`);
+}
+
+let adminDistPath = path.resolve(exeDirStatic, 'admin/dist');
+if (!fs.existsSync(adminDistPath)) {
+    adminDistPath = path.resolve(process.cwd(), 'admin/dist'); // Fallback to cwd
+}
+
+if (fs.existsSync(adminDistPath)) {
+    const adminApp = express();
+    adminApp.use(express.static(adminDistPath));
+    // Support React Router history API for admin
+    // Using a simple middleware instead of route pattern matching to avoid path-to-regexp errors
+    adminApp.use((req, res) => {
+        res.sendFile(path.join(adminDistPath, 'index.html'));
+    });
+    adminApp.listen(5173, () => {
+        console.log(`✅ Admin Panel UI server is running on port 5173 (Serving from: ${adminDistPath})`);
+    });
+} else {
+    console.log(`⚠️  Warning: Admin UI files not found at ${adminDistPath}`);
+}
+// ==========================================
+
 // Keep process alive
-setInterval(() => {}, 1000);
+app.listen(PORT, () => {
+    console.log(`✅ API Backend Server is running on port ${PORT}`);
+    
+    // Auto-open browsers in pkg executable environment
+    // We check if we are running from an exe by looking at process.pkg or if process.execPath is not node
+    const isExe = typeof process.pkg !== 'undefined' || !process.execPath.endsWith('node.exe');
+    
+    if (isExe || fs.existsSync(clientDistPath) || fs.existsSync(adminDistPath)) {
+        console.log('🌐 Production build detected. Opening browsers in 3 seconds...');
+        setTimeout(() => {
+            const clientUrl = `http://localhost:5566`;
+            const adminUrl = `http://localhost:5173`;
+
+            // Open Dashboard in Chrome Kiosk mode
+            exec(`start chrome --kiosk "${clientUrl}"`, (error) => {
+                if (error) {
+                    console.log('⚠️ Failed to open Chrome. Trying default browser...');
+                    exec(`start "" "${clientUrl}"`);
+                }
+            });
+
+            // Open Admin in Edge
+            exec(`start msedge "${adminUrl}"`, (error) => {
+                if (error) {
+                    console.log('⚠️ Failed to open Edge. Trying default browser...');
+                    exec(`start "" "${adminUrl}"`);
+                }
+            });
+        }, 3000);
+    }
+});
 
 app.get('/api/test-db', async (req, res) => {
     try {

@@ -100,12 +100,16 @@ const AssemblyModule = () => {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
+        const baseUrl = process.env.NODE_ENV === 'production' 
+            ? `http://${window.location.hostname}:3001` 
+            : '';
+
         const [resOp10, resOp20, resOp30, resOp10Calib, resOp30Calib] = await Promise.all([
-          fetch('/api/op10'),
-          fetch('/api/op20'),
-          fetch('/api/op30'),
-          fetch('/api/op10/calibration-status'),
-          fetch('/api/op30/calibration-status')
+          fetch(`${baseUrl}/api/op10`),
+          fetch(`${baseUrl}/api/op20`),
+          fetch(`${baseUrl}/api/op30`),
+          fetch(`${baseUrl}/api/op10/calibration-status`),
+          fetch(`${baseUrl}/api/op30/calibration-status`)
         ]);
         
         const dataOp10 = await resOp10.json();
