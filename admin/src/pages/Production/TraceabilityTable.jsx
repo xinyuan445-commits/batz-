@@ -58,37 +58,69 @@ const columns = [
             const r1 = record.Production_PhotoResult1 === 1;
             const r2 = record.Production_PhotoResult2 === 1;
             const r3 = record.Production_PhotoResult3 === 1;
+            
+            const formatNum = (val) => val != null ? Number(val).toFixed(3) : '-';
+            
             return (
-                <div style={{ fontSize: 12 }}>
-                   视觉结果: <Tag color={r1&&r2&&r3 ? 'green' : 'red'}>{r1&&r2&&r3 ? 'OK' : 'NG'}</Tag>
+                <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                   <div>视觉结果: <Tag color={r1&&r2&&r3 ? 'green' : 'red'}>{r1&&r2&&r3 ? 'OK' : 'NG'}</Tag></div>
+                   <div style={{ color: '#666' }}>
+                     直径: {formatNum(record.Production_Circle1_Diameter)} / {formatNum(record.Production_Circle2_Diameter)} / {formatNum(record.Production_Circle3_Diameter)} mm
+                   </div>
+                   <div style={{ color: '#666' }}>
+                     圆心距: {formatNum(record.Production_CenterDist1)} / {formatNum(record.Production_CenterDist2)} / {formatNum(record.Production_CenterDist3)} mm
+                   </div>
                 </div>
             );
         } else if (record.Source === 'OP20') {
             const r1 = record.PressResult_Left === 1;
             const r2 = record.PressResult_Right === 1;
             const r3 = record.PressResult_Back === 1;
+            
+            const formatNum = (val) => val != null ? Number(val).toFixed(2) : '-';
+            
             return (
-                <div style={{ fontSize: 12 }}>
-                   压装结果: 左<Tag color={r1 ? 'green' : 'red'}>{r1 ? 'OK' : 'NG'}</Tag> 
-                   右<Tag color={r2 ? 'green' : 'red'}>{r2 ? 'OK' : 'NG'}</Tag> 
-                   后<Tag color={r3 ? 'green' : 'red'}>{r3 ? 'OK' : 'NG'}</Tag>
+                <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                   <div>
+                     压装结果: 左<Tag color={r1 ? 'green' : 'red'}>{r1 ? 'OK' : 'NG'}</Tag> 
+                     右<Tag color={r2 ? 'green' : 'red'}>{r2 ? 'OK' : 'NG'}</Tag> 
+                     后<Tag color={r3 ? 'green' : 'red'}>{r3 ? 'OK' : 'NG'}</Tag>
+                   </div>
+                   <div style={{ color: '#666', display: 'grid', gridTemplateColumns: 'auto auto', gap: '2px 8px' }}>
+                     <span>左压力: {formatNum(record.PressPressure_Left)} kN</span>
+                     <span>左位移: {formatNum(record.PressDisplacement_Left)} mm</span>
+                     <span>右压力: {formatNum(record.PressPressure_Right)} kN</span>
+                     <span>右位移: {formatNum(record.PressDisplacement_Right)} mm</span>
+                     <span>后压力: {formatNum(record.PressPressure_Back)} kN</span>
+                     <span>后位移: {formatNum(record.PressDisplacement_Back)} mm</span>
+                   </div>
                 </div>
             );
         } else if (record.Source === 'OP30') {
             const r1 = record.Production_AngleResult_Vertical === 1;
             const r2 = record.Production_AngleResult_LeftParallel === 1;
             const r3 = record.Production_AngleResult_RightParallel === 1;
+            
+            const formatNum = (val) => val != null ? Number(val).toFixed(2) : '-';
+            
             return (
-                <div style={{ fontSize: 12 }}>
-                   角度结果: 垂<Tag color={r1 ? 'green' : 'red'}>{r1 ? 'OK' : 'NG'}</Tag> 
-                   左<Tag color={r2 ? 'green' : 'red'}>{r2 ? 'OK' : 'NG'}</Tag> 
-                   右<Tag color={r3 ? 'green' : 'red'}>{r3 ? 'OK' : 'NG'}</Tag>
+                <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                   <div>
+                     角度结果: 垂<Tag color={r1 ? 'green' : 'red'}>{r1 ? 'OK' : 'NG'}</Tag> 
+                     左<Tag color={r2 ? 'green' : 'red'}>{r2 ? 'OK' : 'NG'}</Tag> 
+                     右<Tag color={r3 ? 'green' : 'red'}>{r3 ? 'OK' : 'NG'}</Tag>
+                   </div>
+                   <div style={{ color: '#666' }}>
+                     垂直: {formatNum(record.Production_Angle_Vertical)}° | 
+                     左平行: {formatNum(record.Production_Angle_LeftParallel)}° | 
+                     右平行: {formatNum(record.Production_Angle_RightParallel)}°
+                   </div>
                 </div>
             );
         } else if (record.Source === 'Automation') {
              return (
                 <div style={{ fontSize: 12 }}>
-                   批次: {record.GroupId}
+                   批次: {record.GroupId || '-'}
                 </div>
             );
         }

@@ -5,10 +5,14 @@
   },
   "yieldRate": {
     "target": 50,
-    "max": 100
+    "max": 50
   },
   "oee": {
     "target": 90,
     "max": 100
+  },
+  "injection": {
+    "target": 144,
+    "max": 250
   }
 }

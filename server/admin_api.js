@@ -221,9 +221,9 @@ router.get('/traceability', async (req, res) => {
 
         // We run queries in parallel
         // Automation table: PartNumber -> Code, IsOk -> ProductStatus
-        const queryOp10 = `SELECT 'OP10' as Source, CreatedTime, Code, ProductStatus, Production_PhotoResult1, Production_PhotoResult2, Production_PhotoResult3 FROM op10_table WHERE Code LIKE @likeCode`;
-        const queryOp20 = `SELECT 'OP20' as Source, CreatedTime, Code, ProductStatus, PressResult_Left, PressResult_Right, PressResult_Back FROM op20_table WHERE Code LIKE @likeCode`;
-        const queryOp30 = `SELECT 'OP30' as Source, CreatedTime, Code, ProductStatus, Production_AngleResult_Vertical, Production_AngleResult_LeftParallel, Production_AngleResult_RightParallel FROM op30_table WHERE Code LIKE @likeCode`;
+        const queryOp10 = `SELECT 'OP10' as Source, CreatedTime, Code, ProductStatus, Production_PhotoResult1, Production_PhotoResult2, Production_PhotoResult3, Production_Circle1_Diameter, Production_Circle2_Diameter, Production_Circle3_Diameter, Production_CenterDist1, Production_CenterDist2, Production_CenterDist3 FROM op10_table WHERE Code LIKE @likeCode`;
+        const queryOp20 = `SELECT 'OP20' as Source, CreatedTime, Code, ProductStatus, PressResult_Left, PressResult_Right, PressResult_Back, PressPressure_Left, PressDisplacement_Left, PressPressure_Right, PressDisplacement_Right, PressPressure_Back, PressDisplacement_Back FROM op20_table WHERE Code LIKE @likeCode`;
+        const queryOp30 = `SELECT 'OP30' as Source, CreatedTime, Code, ProductStatus, Production_AngleResult_Vertical, Production_AngleResult_LeftParallel, Production_AngleResult_RightParallel, Production_Angle_Vertical, Production_Angle_LeftParallel, Production_Angle_RightParallel FROM op30_table WHERE Code LIKE @likeCode`;
         const queryAuto = `SELECT 'Automation' as Source, CreatedTime, PartNumber as Code, IsOk as ProductStatus, GroupId FROM auto_line_table WHERE PartNumber LIKE @likeCode`;
 
         const [resultOp10, resultOp20, resultOp30, resultAuto] = await Promise.all([

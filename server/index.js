@@ -1,3 +1,21 @@
+// Polyfill for AbortSignal.any for Node 18 pkg environment
+if (typeof AbortSignal !== 'undefined' && !AbortSignal.any) {
+    AbortSignal.any = function (signals) {
+        const controller = new AbortController();
+        const onAbort = (e) => {
+            controller.abort(e?.target?.reason || new Error('Aborted'));
+        };
+        for (const signal of signals) {
+            if (signal.aborted) {
+                controller.abort(signal.reason);
+                return controller.signal;
+            }
+            signal.addEventListener('abort', onAbort, { once: true });
+        }
+        return controller.signal;
+    };
+}
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -33,29 +51,53 @@ app.use(cors({
 app.use(express.json());
 
 // ==========================================
-// License Expiration Check Logic
+// Remote License Expiration Check Logic
 // ==========================================
-// Set the expiration date here (Format: YYYY-MM-DD)
-// For example, if the balance is due by April 30, 2026, set it to '2026-04-30'.
-// Once this date is passed, the APIs will return a 403 Forbidden error.
-const LICENSE_EXPIRATION_DATE = '2026-04-30'; // <-- 修改这里的日期来控制什么时候停用
+let isLicenseValid = true;
 
-const isLicenseExpired = () => {
-    if (!LICENSE_EXPIRATION_DATE) return false;
-    const expirationDate = new Date(LICENSE_EXPIRATION_DATE);
-    const currentDate = new Date();
-    // Compare dates
-    return currentDate > expirationDate;
+// Node 18 fetch is experimental, sometimes needs this or an external library, 
+// but we'll use a safer approach with try/catch and default values
+const checkRemoteLicense = async () => {
+    try {
+        // 请求您部署在云端的 Python API
+        const response = await fetch('https://api.quanshenghuoqin.com/api/query/license', {
+            // Add timeout to prevent hanging
+            signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            // 如果 API 返回 1，说明授权有效
+            if (data && data.status === 1) {
+                isLicenseValid = true;
+            } else {
+                isLicenseValid = false;
+            }
+        } else {
+            // HTTP Error
+            isLicenseValid = false;
+        }
+    } catch (err) {
+        console.error('Failed to check license from remote server:', err.message);
+        // 网络请求失败时，出于安全考虑，可以选择锁定大屏，或者保持上一次的状态
+        // 这里暂时保持为锁定状态
+        isLicenseValid = false;
+    }
 };
+
+// 初始检查一次
+checkRemoteLicense();
+// 每隔10分钟（600000毫秒）重新检查一次授权状态
+setInterval(checkRemoteLicense, 60000);
 
 // License Check Middleware
 const licenseCheckMiddleware = (req, res, next) => {
-    if (isLicenseExpired()) {
-        // If expired, return a JSON error that the frontend will eventually catch, 
-        // causing the dashboard to show empty/error states and preventing backend use.
+    // 排除前端页面的直接访问，避免无法加载静态资源
+    // 主要是拦截所有的 /api 请求（除了我们自己的验证请求外）
+    if (!isLicenseValid && req.path.startsWith('/api/')) {
         return res.status(403).json({ 
             error: 'SYSTEM_LOCKED', 
-            message: '系统授权已过期，请联系供应商完成尾款结算以恢复使用。' 
+            message: '请检查网络' 
         });
     }
     next();
@@ -84,7 +126,8 @@ if (!fs.existsSync(configPath)) {
 const defaultConfig = {
     production: { target: 1404, max: 1600 },
     yieldRate: { target: 98, max: 100 },
-    oee: { target: 90, max: 100 }
+    oee: { target: 90, max: 100 },
+    injection: { target: 144, max: 250 }
 };
 
 app.get('/api/config/kpi', (req, res) => {
@@ -184,8 +227,9 @@ app.listen(PORT, () => {
             const clientUrl = `http://localhost:5566`;
             const adminUrl = `http://localhost:5173`;
 
-            // Open Dashboard in Chrome Kiosk mode
-            exec(`start chrome --kiosk "${clientUrl}"`, (error) => {
+            // Open Dashboard in Chrome with regular full screen mode instead of kiosk mode
+            // This allows users to exit full screen with F11
+            exec(`start chrome --start-fullscreen "${clientUrl}"`, (error) => {
                 if (error) {
                     console.log('⚠️ Failed to open Chrome. Trying default browser...');
                     exec(`start "" "${clientUrl}"`);
@@ -545,6 +589,6 @@ app.get('/api/injection', async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+// });

@@ -9,6 +9,7 @@ const QualityModule = () => {
     hours: [],
     rates: []
   });
+  const [target, setTarget] = useState(98); // Default target
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,15 +18,21 @@ const QualityModule = () => {
             ? `http://${window.location.hostname}:3001` 
             : '';
 
-        const [op10Res, op20Res, op30Res] = await Promise.all([
+        const [op10Res, op20Res, op30Res, configRes] = await Promise.all([
             fetch(`${baseUrl}/api/op10/all`),
             fetch(`${baseUrl}/api/op20/all`),
-            fetch(`${baseUrl}/api/op30/all`)
+            fetch(`${baseUrl}/api/op30/all`),
+            fetch(`${baseUrl}/api/config/kpi`)
         ]);
         
         const op10Data = await op10Res.json();
         const op20Data = await op20Res.json();
         const op30Data = await op30Res.json();
+        const configData = await configRes.json();
+        
+        if (configData?.yieldRate?.target) {
+            setTarget(configData.yieldRate.target);
+        }
         
         if (!Array.isArray(op10Data)) return;
 
@@ -160,9 +167,11 @@ const QualityModule = () => {
     },
     yAxis: {
       type: 'value',
-      min: 95,
+      // If target is 98, min will be 95. If target is 90, min will be 87. It ensures the target line is always visible.
+      min: Math.floor(Math.min(95, target - 3)),
       max: 100,
-      interval: 1,
+      // Dynamic interval based on range. E.g., if range is 100-87=13, interval could be 2 or 3. If range is 5, interval is 1.
+      interval: Math.max(1, Math.ceil((100 - Math.floor(Math.min(95, target - 3))) / 5)),
       axisLabel: { formatter: '{value}%', color: '#94a3b8', fontSize: 22, fontFamily: 'Rajdhani' },
       splitLine: { lineStyle: { color: '#334155', type: 'dashed', opacity: 0.3 } }
     },
@@ -203,7 +212,7 @@ const QualityModule = () => {
             },
             lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
             data: [
-                { yAxis: 98, name: '目标' }
+                { yAxis: target, name: '目标' }
             ]
         }
       }

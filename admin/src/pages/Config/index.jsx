@@ -70,12 +70,13 @@ const DashboardConfig = () => {
           initialValues={{
             production: { target: 1404, max: 1600 },
             yieldRate: { target: 98, max: 100 },
-            oee: { target: 90, max: 100 }
+            oee: { target: 90, max: 100 },
+            injection: { target: 1500, max: 2000 }
           }}
         >
           <Row gutter={24}>
             {/* 产量配置 */}
-            <Col span={8}>
+            <Col span={6}>
               <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>产量 (Production)</Title>}>
                 <Form.Item
                   label="目标值 (Target)"
@@ -95,7 +96,7 @@ const DashboardConfig = () => {
             </Col>
 
             {/* 合格率配置 */}
-            <Col span={8}>
+            <Col span={6}>
               <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>合格率 (Yield Rate)</Title>}>
                 <Form.Item
                   label="目标值 (Target) %"
@@ -115,7 +116,7 @@ const DashboardConfig = () => {
             </Col>
 
             {/* OEE配置 */}
-            <Col span={8}>
+            <Col span={6}>
               <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>OEE</Title>}>
                 <Form.Item
                   label="目标值 (Target) %"
@@ -130,6 +131,26 @@ const DashboardConfig = () => {
                   rules={[{ required: true, message: '请输入最大刻度' }]}
                 >
                   <InputNumber style={{ width: '100%' }} min={1} max={100} />
+                </Form.Item>
+              </Card>
+            </Col>
+
+            {/* 注塑配置 */}
+            <Col span={6}>
+              <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>注塑 (Injection)</Title>}>
+                <Form.Item
+                  label="目标值 (Target)"
+                  name={['injection', 'target']}
+                  rules={[{ required: true, message: '请输入目标值' }]}
+                >
+                  <InputNumber style={{ width: '100%' }} min={0} />
+                </Form.Item>
+                <Form.Item
+                  label="折线图最大刻度 (Max)"
+                  name={['injection', 'max']}
+                  rules={[{ required: true, message: '请输入最大刻度' }]}
+                >
+                  <InputNumber style={{ width: '100%' }} min={1} />
                 </Form.Item>
               </Card>
             </Col>

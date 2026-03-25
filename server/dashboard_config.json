@@ -10,5 +10,9 @@
   "oee": {
     "target": 50,
     "max": 50
+  },
+  "injection": {
+    "target": 144,
+    "max": 250
   }
 }

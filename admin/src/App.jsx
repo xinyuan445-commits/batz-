@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import { ConfigProvider, Layout, Menu, theme, Button, Dropdown, Space, Avatar, message } from 'antd';
+import { ConfigProvider, Layout, Menu, theme, Button, Dropdown, Space, Avatar, message, Result } from 'antd';
 import { ProLayout } from '@ant-design/pro-components';
 import { 
   DashboardOutlined, 
   TableOutlined, 
   SettingOutlined, 
   UserOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  WifiOutlined
 } from '@ant-design/icons';
+import axios from 'axios';
 import Login from './pages/Login';
 import Op10Table from './pages/Production';
 import Op20Table from './pages/Production/Op20Table';
@@ -17,6 +19,22 @@ import AutomationTable from './pages/Production/AutomationTable';
 import TraceabilityTable from './pages/Production/TraceabilityTable';
 import DashboardConfig from './pages/Config/index';
 import BatzLogo from './assets/Batzlogo.jpg';
+
+// Setup global axios interceptor to catch 403 SYSTEM_LOCKED errors
+const setupAxiosInterceptors = (setSystemLocked) => {
+  axios.interceptors.response.use(
+    (response) => {
+      setSystemLocked(false);
+      return response;
+    },
+    (error) => {
+      if (error.response && error.response.status === 403 && error.response.data && error.response.data.error === 'SYSTEM_LOCKED') {
+        setSystemLocked(true);
+      }
+      return Promise.reject(error);
+    }
+  );
+};
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -29,6 +47,7 @@ const TraceabilityData = () => <TraceabilityTable />;
 
 const App = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSystemLocked, setIsSystemLocked] = useState(false);
 
   // 初始化主题
   useEffect(() => {
@@ -36,12 +55,29 @@ const App = () => {
     if (savedTheme === 'dark') {
       setIsDarkMode(true);
     }
+    // Set up interceptors when app mounts
+    setupAxiosInterceptors(setIsSystemLocked);
   }, []);
 
   const toggleTheme = (checked) => {
     setIsDarkMode(checked);
     localStorage.setItem('theme', checked ? 'dark' : 'light');
   };
+
+  if (isSystemLocked) {
+    return (
+      <ConfigProvider theme={{ algorithm: theme.darkAlgorithm }}>
+        <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#141414' }}>
+          <Result
+            status="error"
+            icon={<WifiOutlined style={{ color: '#ff4d4f' }} />}
+            title={<span style={{ color: '#ff4d4f', fontSize: '32px' }}>请检查网络</span>}
+            subTitle={<span style={{ color: '#999', fontSize: '18px' }}>无法连接到服务器或授权验证失败</span>}
+          />
+        </div>
+      </ConfigProvider>
+    );
+  }
 
   return (
     <ConfigProvider

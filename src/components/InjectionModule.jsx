@@ -17,6 +17,8 @@ const InjectionModule = () => {
     hours: [],
     yields: []
   });
+  const [target, setTarget] = useState(144); // Default per hour target
+  const [maxScale, setMaxScale] = useState(null); // Optional fixed max scale
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,8 +27,22 @@ const InjectionModule = () => {
             ? `http://${window.location.hostname}:3001` 
             : '';
             
-        const response = await fetch(`${baseUrl}/api/injection`);
+        const [response, configRes] = await Promise.all([
+            fetch(`${baseUrl}/api/injection`),
+            fetch(`${baseUrl}/api/config/kpi`)
+        ]);
+        
         const data = await response.json();
+        const configData = await configRes.json();
+        
+        if (configData?.injection?.target) {
+            // The config usually stores total shift target, divide by 12 for hourly target roughly
+            // or if they meant hourly target, just use it. Let's assume the config is hourly target for the chart line.
+            setTarget(configData.injection.target);
+        }
+        if (configData?.injection?.max) {
+            setMaxScale(configData.injection.max);
+        }
         
         if (!Array.isArray(data)) return;
 
@@ -170,8 +186,8 @@ const InjectionModule = () => {
         name: '产量',
         min: 0,
         // Dynamic max based on data or fixed
-        max: (value) => Math.max(250, value.max + 50),
-        interval: 50,
+        max: maxScale ? maxScale : (value) => Math.max(target * 1.5, value.max + 50),
+        interval: maxScale ? Math.floor(maxScale/5) : 50,
         axisLabel: { formatter: '{value}', color: '#94a3b8', fontSize: 22, fontFamily: 'Rajdhani' },
         axisLine: { show: false },
         splitLine: { lineStyle: { color: '#334155', type: 'dashed', opacity: 0.3 } }
@@ -202,7 +218,7 @@ const InjectionModule = () => {
             lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
             data: [
                 { 
-                    yAxis: 144, 
+                    yAxis: target, 
                     name: '目标', 
                     label: { 
                         position: 'middle', 

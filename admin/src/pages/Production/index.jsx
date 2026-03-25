@@ -21,7 +21,7 @@ const columns = [
     dataIndex: 'Code',
     copyable: true,
     width: 200,
-    search: false, // Disable search by code
+    search: true, // Enable search by code
   },
   {
     title: '状态',
@@ -201,6 +201,7 @@ const Op10Table = () => {
                 startTime: startTime, 
                 endTime: endTime,
                 status: params.ProductStatus, // 传递状态查询参数
+                code: params.Code, // 传递条码查询参数
               },
             });
             
