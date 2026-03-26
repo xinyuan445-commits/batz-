@@ -117,14 +117,32 @@ const columns = [
 
 const Op20Table = () => {
   const actionRef = useRef();
+  const formRef = useRef();
 
   // Export to Excel function
   const exportToExcel = async () => {
     try {
+        const formValues = formRef.current?.getFieldsValue() || {};
+        
+        let startTime = formValues.CreatedTime?.[0];
+        let endTime = formValues.CreatedTime?.[1];
+
+        if (!startTime && !endTime) {
+           startTime = dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+           endTime = dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        } else {
+           startTime = dayjs(startTime).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+           endTime = dayjs(endTime).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        }
+
         const response = await axios.get('http://localhost:3001/api/admin/production/op20', {
             params: {
                 current: 1,
-                pageSize: 1000, // Export limit
+                pageSize: 10000, // Export limit
+                startTime: startTime,
+                endTime: endTime,
+                status: formValues.ProductStatus,
+                code: formValues.Code,
             }
         });
 
@@ -172,6 +190,7 @@ const Op20Table = () => {
       <ProTable
         headerTitle="OP20 压装记录"
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="CreatedTime" 
         search={{
           labelWidth: 'auto',

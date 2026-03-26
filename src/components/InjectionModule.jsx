@@ -32,6 +32,10 @@ const InjectionModule = () => {
             fetch(`${baseUrl}/api/config/kpi`)
         ]);
         
+        if (!response.ok || !configRes.ok) {
+            return; // If locked (403), stop parsing to prevent TypeError
+        }
+
         const data = await response.json();
         const configData = await configRes.json();
         

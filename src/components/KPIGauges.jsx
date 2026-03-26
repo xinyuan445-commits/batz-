@@ -32,6 +32,10 @@ const KPIGauges = () => {
             fetch(`${baseUrl}/api/config/kpi`)
         ]);
         
+        if (!injectionRes.ok || !configRes.ok) {
+            return; // Stop parsing if locked (403)
+        }
+
         const injectionData = await injectionRes.json();
         const op10Data = await op10Res.json();
         const op20Data = await op20Res.json();

@@ -98,27 +98,56 @@ const columns = [
         );
     }
   },
+  // Calibration OK Fields (Hidden by default)
+  { title: '标定OK拍照1', dataIndex: 'CalibOK_PhotoResult1', search: false, hideInTable: true },
+  { title: '标定OK拍照2', dataIndex: 'CalibOK_PhotoResult2', search: false, hideInTable: true },
+  { title: '标定OK拍照3', dataIndex: 'CalibOK_PhotoResult3', search: false, hideInTable: true },
+  { title: '标定OK直径1', dataIndex: 'CalibOK_Circle1_Diameter', search: false, hideInTable: true },
+  { title: '标定OK直径2', dataIndex: 'CalibOK_Circle2_Diameter', search: false, hideInTable: true },
+  { title: '标定OK直径3', dataIndex: 'CalibOK_Circle3_Diameter', search: false, hideInTable: true },
+  { title: '标定OK圆心距1', dataIndex: 'CalibOK_CenterDist1', search: false, hideInTable: true },
+  { title: '标定OK圆心距2', dataIndex: 'CalibOK_CenterDist2', search: false, hideInTable: true },
+  { title: '标定OK圆心距3', dataIndex: 'CalibOK_CenterDist3', search: false, hideInTable: true },
+  // Calibration NG Fields (Hidden by default)
+  { title: '标定NG拍照1', dataIndex: 'CalibNG_PhotoResult1', search: false, hideInTable: true },
+  { title: '标定NG拍照2', dataIndex: 'CalibNG_PhotoResult2', search: false, hideInTable: true },
+  { title: '标定NG拍照3', dataIndex: 'CalibNG_PhotoResult3', search: false, hideInTable: true },
+  { title: '标定NG直径1', dataIndex: 'CalibNG_Circle1_Diameter', search: false, hideInTable: true },
+  { title: '标定NG直径2', dataIndex: 'CalibNG_Circle2_Diameter', search: false, hideInTable: true },
+  { title: '标定NG直径3', dataIndex: 'CalibNG_Circle3_Diameter', search: false, hideInTable: true },
+  { title: '标定NG圆心距1', dataIndex: 'CalibNG_CenterDist1', search: false, hideInTable: true },
+  { title: '标定NG圆心距2', dataIndex: 'CalibNG_CenterDist2', search: false, hideInTable: true },
+  { title: '标定NG圆心距3', dataIndex: 'CalibNG_CenterDist3', search: false, hideInTable: true },
 ];
 
 const Op10Table = () => {
   const actionRef = useRef();
+  const formRef = useRef();
 
   // Export to Excel function
   const exportToExcel = async () => {
     try {
-        // Get current search parameters from the table form
-        // Note: We need to access the form instance from actionRef if possible, 
-        // but ProTable doesn't expose form values easily outside request.
-        // A simpler approach for now is to export the *current page* or fetch *all* based on visible criteria.
-        // For better UX, let's fetch the latest 1000 records or current filter if we could access it.
-        // Since we can't easily get current filter params outside request, we'll download top 1000 records for now
-        // or we can just download the data currently in the table if we had access to dataSource.
+        const formValues = formRef.current?.getFieldsValue() || {};
         
-        // Let's implement a "Download Latest" feature first.
+        let startTime = formValues.CreatedTime?.[0];
+        let endTime = formValues.CreatedTime?.[1];
+
+        if (!startTime && !endTime) {
+           startTime = dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+           endTime = dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        } else {
+           startTime = dayjs(startTime).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+           endTime = dayjs(endTime).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        }
+
         const response = await axios.get('http://localhost:3001/api/admin/production/op10', {
             params: {
                 current: 1,
-                pageSize: 1000, // Export limit
+                pageSize: 10000, // Export up to 10000 records that match the filter
+                startTime: startTime,
+                endTime: endTime,
+                status: formValues.ProductStatus,
+                code: formValues.Code,
             }
         });
 
@@ -133,6 +162,24 @@ const Op10Table = () => {
                 '圆心距1': item.Production_CenterDist1,
                 '圆心距2': item.Production_CenterDist2,
                 '圆心距3': item.Production_CenterDist3,
+                '标定OK_拍照1': item.CalibOK_PhotoResult1,
+                '标定OK_拍照2': item.CalibOK_PhotoResult2,
+                '标定OK_拍照3': item.CalibOK_PhotoResult3,
+                '标定OK_直径1': item.CalibOK_Circle1_Diameter,
+                '标定OK_直径2': item.CalibOK_Circle2_Diameter,
+                '标定OK_直径3': item.CalibOK_Circle3_Diameter,
+                '标定OK_圆心距1': item.CalibOK_CenterDist1,
+                '标定OK_圆心距2': item.CalibOK_CenterDist2,
+                '标定OK_圆心距3': item.CalibOK_CenterDist3,
+                '标定NG_拍照1': item.CalibNG_PhotoResult1,
+                '标定NG_拍照2': item.CalibNG_PhotoResult2,
+                '标定NG_拍照3': item.CalibNG_PhotoResult3,
+                '标定NG_直径1': item.CalibNG_Circle1_Diameter,
+                '标定NG_直径2': item.CalibNG_Circle2_Diameter,
+                '标定NG_直径3': item.CalibNG_Circle3_Diameter,
+                '标定NG_圆心距1': item.CalibNG_CenterDist1,
+                '标定NG_圆心距2': item.CalibNG_CenterDist2,
+                '标定NG_圆心距3': item.CalibNG_CenterDist3,
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
@@ -163,6 +210,7 @@ const Op10Table = () => {
       <ProTable
         headerTitle="OP10 尺寸测量记录"
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="CreatedTime" 
         search={{
           labelWidth: 'auto',

@@ -16,7 +16,25 @@ const buildOp10Query = (whereClause) => `
         Production_CenterDist3,
         Production_PhotoResult1,
         Production_PhotoResult2,
-        Production_PhotoResult3
+        Production_PhotoResult3,
+        CalibOK_PhotoResult1,
+        CalibOK_PhotoResult2,
+        CalibOK_PhotoResult3,
+        CalibOK_Circle1_Diameter,
+        CalibOK_Circle2_Diameter,
+        CalibOK_Circle3_Diameter,
+        CalibOK_CenterDist1,
+        CalibOK_CenterDist2,
+        CalibOK_CenterDist3,
+        CalibNG_PhotoResult1,
+        CalibNG_PhotoResult2,
+        CalibNG_PhotoResult3,
+        CalibNG_Circle1_Diameter,
+        CalibNG_Circle2_Diameter,
+        CalibNG_Circle3_Diameter,
+        CalibNG_CenterDist1,
+        CalibNG_CenterDist2,
+        CalibNG_CenterDist3
     FROM op10_table
     ${whereClause}
     ORDER BY CreatedTime DESC
@@ -53,7 +71,27 @@ const buildOp30Query = (whereClause) => `
         Production_AngleResult_RightParallel,
         Production_Angle_Vertical,
         Production_Angle_LeftParallel,
-        Production_Angle_RightParallel
+        Production_Angle_RightParallel,
+        CalibOK_PhotoResult1,
+        CalibOK_PhotoResult2,
+        CalibOK_PhotoResult3,
+        CalibOK_PhotoResult4,
+        CalibOK_AngleResult_Vertical,
+        CalibOK_AngleResult_LeftParallel,
+        CalibOK_AngleResult_RightParallel,
+        CalibOK_Angle_Vertical,
+        CalibOK_Angle_LeftParallel,
+        CalibOK_Angle_RightParallel,
+        CalibNG_PhotoResult1,
+        CalibNG_PhotoResult2,
+        CalibNG_PhotoResult3,
+        CalibNG_PhotoResult4,
+        CalibNG_AngleResult_Vertical,
+        CalibNG_AngleResult_LeftParallel,
+        CalibNG_AngleResult_RightParallel,
+        CalibNG_Angle_Vertical,
+        CalibNG_Angle_LeftParallel,
+        CalibNG_Angle_RightParallel
     FROM op30_table
     ${whereClause}
     ORDER BY CreatedTime DESC

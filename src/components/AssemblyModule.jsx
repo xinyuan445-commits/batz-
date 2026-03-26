@@ -112,6 +112,10 @@ const AssemblyModule = () => {
           fetch(`${baseUrl}/api/op30/calibration-status`)
         ]);
         
+        if (!resOp10.ok || !resOp20.ok || !resOp30.ok) {
+            return; // Stop parsing if locked (403)
+        }
+
         const dataOp10 = await resOp10.json();
         const dataOp20 = await resOp20.json();
         const dataOp30 = await resOp30.json();

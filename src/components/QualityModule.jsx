@@ -25,6 +25,10 @@ const QualityModule = () => {
             fetch(`${baseUrl}/api/config/kpi`)
         ]);
         
+        if (!op10Res.ok || !op20Res.ok || !op30Res.ok || !configRes.ok) {
+            return; // Stop parsing if any request fails (e.g. 403 Forbidden)
+        }
+
         const op10Data = await op10Res.json();
         const op20Data = await op20Res.json();
         const op30Data = await op30Res.json();

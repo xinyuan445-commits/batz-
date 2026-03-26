@@ -80,18 +80,58 @@ const columns = [
     search: false,
     render: (val) => <Badge status={val === 1 ? 'success' : 'error'} text={val === 1 ? 'OK' : 'NG'} />,
   },
+  // Calibration OK Fields (Hidden by default)
+  { title: '标定OK拍照1', dataIndex: 'CalibOK_PhotoResult1', search: false, hideInTable: true },
+  { title: '标定OK拍照2', dataIndex: 'CalibOK_PhotoResult2', search: false, hideInTable: true },
+  { title: '标定OK拍照3', dataIndex: 'CalibOK_PhotoResult3', search: false, hideInTable: true },
+  { title: '标定OK拍照4', dataIndex: 'CalibOK_PhotoResult4', search: false, hideInTable: true },
+  { title: '标定OK垂直结果', dataIndex: 'CalibOK_AngleResult_Vertical', search: false, hideInTable: true },
+  { title: '标定OK左平行结果', dataIndex: 'CalibOK_AngleResult_LeftParallel', search: false, hideInTable: true },
+  { title: '标定OK右平行结果', dataIndex: 'CalibOK_AngleResult_RightParallel', search: false, hideInTable: true },
+  { title: '标定OK垂直角度', dataIndex: 'CalibOK_Angle_Vertical', search: false, hideInTable: true },
+  { title: '标定OK左平行角度', dataIndex: 'CalibOK_Angle_LeftParallel', search: false, hideInTable: true },
+  { title: '标定OK右平行角度', dataIndex: 'CalibOK_Angle_RightParallel', search: false, hideInTable: true },
+  // Calibration NG Fields (Hidden by default)
+  { title: '标定NG拍照1', dataIndex: 'CalibNG_PhotoResult1', search: false, hideInTable: true },
+  { title: '标定NG拍照2', dataIndex: 'CalibNG_PhotoResult2', search: false, hideInTable: true },
+  { title: '标定NG拍照3', dataIndex: 'CalibNG_PhotoResult3', search: false, hideInTable: true },
+  { title: '标定NG拍照4', dataIndex: 'CalibNG_PhotoResult4', search: false, hideInTable: true },
+  { title: '标定NG垂直结果', dataIndex: 'CalibNG_AngleResult_Vertical', search: false, hideInTable: true },
+  { title: '标定NG左平行结果', dataIndex: 'CalibNG_AngleResult_LeftParallel', search: false, hideInTable: true },
+  { title: '标定NG右平行结果', dataIndex: 'CalibNG_AngleResult_RightParallel', search: false, hideInTable: true },
+  { title: '标定NG垂直角度', dataIndex: 'CalibNG_Angle_Vertical', search: false, hideInTable: true },
+  { title: '标定NG左平行角度', dataIndex: 'CalibNG_Angle_LeftParallel', search: false, hideInTable: true },
+  { title: '标定NG右平行角度', dataIndex: 'CalibNG_Angle_RightParallel', search: false, hideInTable: true },
 ];
 
 const Op30Table = () => {
   const actionRef = useRef();
+  const formRef = useRef();
 
   // Export to Excel function
   const exportToExcel = async () => {
     try {
+        const formValues = formRef.current?.getFieldsValue() || {};
+        
+        let startTime = formValues.CreatedTime?.[0];
+        let endTime = formValues.CreatedTime?.[1];
+
+        if (!startTime && !endTime) {
+           startTime = dayjs().startOf('day').format('YYYY-MM-DD HH:mm:ss');
+           endTime = dayjs().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        } else {
+           startTime = dayjs(startTime).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+           endTime = dayjs(endTime).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+        }
+
         const response = await axios.get('http://localhost:3001/api/admin/production/op30', {
             params: {
                 current: 1,
-                pageSize: 1000, // Export limit
+                pageSize: 10000, // Export limit
+                startTime: startTime,
+                endTime: endTime,
+                status: formValues.ProductStatus,
+                code: formValues.Code,
             }
         });
 
@@ -106,6 +146,26 @@ const Op30Table = () => {
                 '垂直结果': item.Production_AngleResult_Vertical === 1 ? 'OK' : 'NG',
                 '左平行结果': item.Production_AngleResult_LeftParallel === 1 ? 'OK' : 'NG',
                 '右平行结果': item.Production_AngleResult_RightParallel === 1 ? 'OK' : 'NG',
+                '标定OK_拍照1': item.CalibOK_PhotoResult1,
+                '标定OK_拍照2': item.CalibOK_PhotoResult2,
+                '标定OK_拍照3': item.CalibOK_PhotoResult3,
+                '标定OK_拍照4': item.CalibOK_PhotoResult4,
+                '标定OK_垂直结果': item.CalibOK_AngleResult_Vertical,
+                '标定OK_左平行结果': item.CalibOK_AngleResult_LeftParallel,
+                '标定OK_右平行结果': item.CalibOK_AngleResult_RightParallel,
+                '标定OK_垂直角度': item.CalibOK_Angle_Vertical,
+                '标定OK_左平行角度': item.CalibOK_Angle_LeftParallel,
+                '标定OK_右平行角度': item.CalibOK_Angle_RightParallel,
+                '标定NG_拍照1': item.CalibNG_PhotoResult1,
+                '标定NG_拍照2': item.CalibNG_PhotoResult2,
+                '标定NG_拍照3': item.CalibNG_PhotoResult3,
+                '标定NG_拍照4': item.CalibNG_PhotoResult4,
+                '标定NG_垂直结果': item.CalibNG_AngleResult_Vertical,
+                '标定NG_左平行结果': item.CalibNG_AngleResult_LeftParallel,
+                '标定NG_右平行结果': item.CalibNG_AngleResult_RightParallel,
+                '标定NG_垂直角度': item.CalibNG_Angle_Vertical,
+                '标定NG_左平行角度': item.CalibNG_Angle_LeftParallel,
+                '标定NG_右平行角度': item.CalibNG_Angle_RightParallel,
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
@@ -136,6 +196,7 @@ const Op30Table = () => {
       <ProTable
         headerTitle="OP30 角度检测记录"
         actionRef={actionRef}
+        formRef={formRef}
         rowKey="CreatedTime" 
         search={{
           labelWidth: 'auto',
