@@ -51,55 +51,25 @@ app.use(cors({
 app.use(express.json());
 
 // ==========================================
-// Remote License Expiration Check Logic
+// License Check Logic (Currently Disabled)
 // ==========================================
-let isLicenseValid = true;
+let isLicenseValid = true; // Always true to let them use it for now
 
-// Node 18 fetch is experimental, sometimes needs this or an external library, 
-// but we'll use a safer approach with try/catch and default values
-const checkRemoteLicense = async () => {
-    try {
-        // 请求您部署在云端的 Python API
-        const response = await fetch('https://api.quanshenghuoqin.com/api/query/license', {
-            // Add timeout to prevent hanging
-            signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            // 如果 API 返回 1，说明授权有效
-            if (data && data.status === 1) {
-                isLicenseValid = true;
-            } else {
-                isLicenseValid = false;
-            }
-        } else {
-            // HTTP Error
-            isLicenseValid = false;
-        }
-    } catch (err) {
-        console.error('Failed to check license from remote server:', err.message);
-        // 网络请求失败时，出于安全考虑，可以选择锁定大屏，或者保持上一次的状态
-        // 这里暂时保持为锁定状态
-        isLicenseValid = false;
-    }
-};
-
-// 初始检查一次
-checkRemoteLicense();
-// 每隔10分钟（600000毫秒）重新检查一次授权状态
-setInterval(checkRemoteLicense, 60000);
+// const checkRemoteLicense = async () => { ... }
+// checkRemoteLicense();
+// setInterval(checkRemoteLicense, 60000);
 
 // License Check Middleware
 const licenseCheckMiddleware = (req, res, next) => {
-    // 排除前端页面的直接访问，避免无法加载静态资源
-    // 主要是拦截所有的 /api 请求（除了我们自己的验证请求外）
+    // 暂时注释掉拦截逻辑，确保畅通无阻
+    /*
     if (!isLicenseValid && req.path.startsWith('/api/')) {
         return res.status(403).json({ 
             error: 'SYSTEM_LOCKED', 
             message: '请检查网络' 
         });
     }
+    */
     next();
 };
 // ==========================================
