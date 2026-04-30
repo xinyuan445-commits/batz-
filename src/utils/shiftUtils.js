@@ -64,3 +64,63 @@ export const isInCurrentShift = (recordTimeStr, shiftStart, shiftEnd) => {
     const recordTime = parseDbTime(recordTimeStr);
     return recordTime >= shiftStart && recordTime < shiftEnd;
 };
+
+/**
+ * Checks if a given date falls into the defined rest/prep times.
+ * Rules for Shift 1 (08:00 - 20:00):
+ * - 08:00 - 08:15 (Prep)
+ * - 10:00 - 10:15 (Rest)
+ * - 12:00 - 13:00 (Rest)
+ * - 15:00 - 15:15 (Rest)
+ * - 17:00 - 17:30 (Rest)
+ * 
+ * Rules for Shift 2 (20:00 - 08:00) apply the same offsets:
+ * - 20:00 - 20:15
+ * - 22:00 - 22:15
+ * - 00:00 - 01:00
+ * - 03:00 - 03:15
+ * - 05:00 - 05:30
+ * 
+ * @param {Date} date - The date to check
+ * @returns {boolean}
+ */
+export const checkIsRestTime = (date) => {
+    const h = date.getHours() % 12;
+    const m = date.getMinutes();
+    
+    if (h === 8 && m < 15) return true;
+    if (h === 10 && m < 15) return true;
+    if (h === 0) return true; // 12:00-12:59 and 00:00-00:59
+    if (h === 3 && m < 15) return true; // 15:00-15:15 and 03:00-03:15
+    if (h === 5 && m < 30) return true; // 17:00-17:30 and 05:00-05:30
+    
+    return false;
+};
+
+/**
+ * Calculates the number of valid (non-rest) minutes elapsed since the start of the shift.
+ * 
+ * @param {Date} shiftStart - Start of the shift
+ * @param {Date} now - Current time
+ * @returns {number} Number of valid minutes
+ */
+export const getValidElapsedMinutes = (shiftStart, now) => {
+    let validMinutes = 0;
+    let current = new Date(shiftStart);
+    current.setSeconds(0, 0);
+    
+    const end = new Date(now);
+    end.setSeconds(0, 0);
+
+    // Prevent calculating for future dates
+    if (end < current) return 0;
+
+    while (current < end) {
+        if (!checkIsRestTime(current)) {
+            validMinutes++;
+        }
+        current.setMinutes(current.getMinutes() + 1);
+    }
+    
+    return validMinutes;
+};

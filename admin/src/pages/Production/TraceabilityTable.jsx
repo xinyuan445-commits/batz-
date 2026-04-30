@@ -17,6 +17,7 @@ const columns = [
       'OP10': { text: 'OP10', status: 'Processing' },
       'OP20': { text: 'OP20', status: 'Processing' },
       'OP30': { text: 'OP30', status: 'Processing' },
+      'OP40': { text: 'OP40', status: 'Processing' },
       'Automation': { text: '自动化', status: 'Processing' },
     },
   },
@@ -115,6 +116,12 @@ const columns = [
                      左平行: {formatNum(record.Production_Angle_LeftParallel)}° | 
                      右平行: {formatNum(record.Production_Angle_RightParallel)}°
                    </div>
+                </div>
+            );
+        } else if (record.Source === 'OP40') {
+             return (
+                <div style={{ fontSize: 12 }}>
+                   包装工站: {record.Station || '-'}
                 </div>
             );
         } else if (record.Source === 'Automation') {

@@ -1,14 +1,17 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { getShiftRange, isInCurrentShift } from '../utils/shiftUtils';
+import { getShiftRange, isInCurrentShift, checkIsRestTime, getValidElapsedMinutes } from '../utils/shiftUtils';
 
 const KPIGauges = () => {
   const [metrics, setMetrics] = useState({
     totalCount: 0,
     okRate: 0,
-    oee: 0 // Placeholder for OEE, currently using yield rate or can be a separate calculation
+    oee: 0
   });
+
+  // Keep track of the last calculated OEE during rest times
+  const lastOeeRef = useRef(0);
 
   const [config, setConfig] = useState({
     production: { target: 1404, max: 1600 },
@@ -78,45 +81,64 @@ const KPIGauges = () => {
         // Total Count: From OP40 Data (Current Shift)
         const totalCount = op40Count;
         
-        // Calculate Total NG Count from OP10, OP20, OP30 (Original Real Data)
+        // OP10 Total Input Count
+        const op10InputCount = shiftOp10Data.length;
+        
+        // Calculate Total NG Count from OP10, OP20, OP30
         const op10NgCount = shiftOp10Data.filter(d => d.ProductStatus !== 1 && d.ProductStatus !== '1').length;
         const op20NgCount = shiftOp20Data.filter(d => d.ProductStatus !== 1 && d.ProductStatus !== '1').length;
         const op30NgCount = shiftOp30Data.filter(d => d.ProductStatus !== 1 && d.ProductStatus !== '1').length;
-        
         const realTotalNgCount = op10NgCount + op20NgCount + op30NgCount;
         
-        // OP10 Total Input Count (used as denominator for NG Rate)
-        const op10InputCount = shiftOp10Data.length;
-        
-        // Calculate Yield Rate (okRate) with Temporary Adjustments: 
-        // Base 100, but subtract a random integer between 1 and 3 to get [97, 98, 99]
+        // Calculate Yield Rate (okRate) based on NG Rates:
+        // 1. Calculate each station's NG rate
+        // 2. Total NG Rate = sum of all station NG rates
+        // 3. OK Rate = 100% - Total NG Rate
         let okRate = 0;
         if (op10InputCount > 0) {
-            // 生成伪随机种子：只依赖于 op10InputCount，并且每投入 3 个产品才变化一次 (Math.floor(op10InputCount / 3))
-            // 这样既保证了只有 op10 变化才变化，又实现了“隔几次变下”的要求
-            const seed = Math.floor(op10InputCount / 3);
-            const pseudoRandom = Math.abs(Math.sin(seed));
+            const op10NgRate = (op10NgCount / op10InputCount) * 100;
+            const op20NgRate = (op20NgCount / op10InputCount) * 100;
+            const op30NgRate = (op30NgCount / op10InputCount) * 100;
             
-            // Random fluctuation: -1, -2, or -3
-            // pseudoRandom is [0, 1) -> * 3 is [0, 3) -> floor is 0, 1, or 2 -> +1 is 1, 2, or 3
-            const deduction = Math.floor(pseudoRandom * 3) + 1; 
-            
-            // Base target is 100, subtract deduction
-            okRate = 100 - deduction;
+            const totalNgRate = op10NgRate + op20NgRate + op30NgRate;
+            okRate = Number((100 - totalNgRate).toFixed(1));
             
             // Clamp just in case
             if (okRate > 100) okRate = 100;
             if (okRate < 0) okRate = 0;
         } else if (totalCount > 0) {
-            okRate = 99; // Default safe integer value if injection has data but op10 doesn't
+            okRate = 100; // If OP40 has output but no OP10 input is recorded yet
         }
         
-        // Calculate OEE: OP40 Count / OP10 Input Count
-        let oee = 0;
-        if (op10InputCount > 0) {
-            oee = Number(((op40Count / op10InputCount) * 100).toFixed(1));
-            // Clamp to 100% max in case op40 somehow has more records than op10
-            if (oee > 100) oee = 100;
+        // Calculate Minute-by-Minute OEE
+        let oee = lastOeeRef.current; // Default to last OEE (frozen during rest)
+        const now = new Date();
+        
+        // Only update OEE if we are not in a rest period
+        if (!checkIsRestTime(now)) {
+            // Get assembly speed in seconds/piece (default 30)
+            const assemblySpeed = configData?.assembly?.speed || 30;
+            
+            // Calculate standard target per minute
+            // 60 seconds / speed = pieces per minute
+            const targetPerMinute = 60 / assemblySpeed;
+            
+            // Calculate how many valid working minutes have elapsed since the shift started
+            let validElapsedMinutes = getValidElapsedMinutes(shiftStart, now);
+            // Minimum elapsed time set to 1 minute to avoid division by zero
+            if (validElapsedMinutes < 1) validElapsedMinutes = 1;
+            
+            // Dynamic Target = pieces per minute * valid minutes
+            const dynamicTarget = targetPerMinute * validElapsedMinutes;
+            
+            if (dynamicTarget > 0) {
+                oee = Number(((op40Count / dynamicTarget) * 100).toFixed(1));
+                // Clamp to 100% max
+                if (oee > 100) oee = 100;
+                
+                // Update the ref so we remember it during the next rest period
+                lastOeeRef.current = oee;
+            }
         }
 
         setMetrics({

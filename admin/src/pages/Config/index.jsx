@@ -139,7 +139,7 @@ const DashboardConfig = () => {
             <Col span={6}>
               <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>注塑 (Injection)</Title>}>
                 <Form.Item
-                  label="目标值 (Target)"
+                  label="每小时目标值 (Target)"
                   name={['injection', 'target']}
                   rules={[{ required: true, message: '请输入目标值' }]}
                 >
@@ -151,6 +151,22 @@ const DashboardConfig = () => {
                   rules={[{ required: true, message: '请输入最大刻度' }]}
                 >
                   <InputNumber style={{ width: '100%' }} min={1} />
+                </Form.Item>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row gutter={24} style={{ marginTop: 24 }}>
+            {/* 装配配置 */}
+            <Col span={6}>
+              <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>装配效率计算 (Assembly OEE)</Title>}>
+                <Form.Item
+                  label="生产速度 (秒/个)"
+                  name={['assembly', 'speed']}
+                  rules={[{ required: true, message: '请输入生产速度' }]}
+                  tooltip="用于计算每分钟的理论目标产量。例如30秒/个，则每分钟目标为2个。"
+                >
+                  <InputNumber style={{ width: '100%' }} min={1} addonAfter="秒/个" />
                 </Form.Item>
               </Card>
             </Col>

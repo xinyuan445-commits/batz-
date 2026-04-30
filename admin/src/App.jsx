@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Op10Table from './pages/Production';
 import Op20Table from './pages/Production/Op20Table';
 import Op30Table from './pages/Production/Op30Table';
+import Op40Table from './pages/Production/Op40Table';
 import AutomationTable from './pages/Production/AutomationTable';
 import TraceabilityTable from './pages/Production/TraceabilityTable';
 import DashboardConfig from './pages/Config/index';
@@ -42,6 +43,7 @@ const { Header, Content, Footer, Sider } = Layout;
 const ProductionData = () => <Op10Table />;
 const Op20Data = () => <Op20Table />;
 const Op30Data = () => <Op30Table />;
+const Op40Data = () => <Op40Table />;
 const AutomationData = () => <AutomationTable />;
 const TraceabilityData = () => <TraceabilityTable />;
 
@@ -154,6 +156,10 @@ const AdminLayout = ({ onLogout }) => {
                   name: 'OP30 角度检测',
                 },
                 {
+                  path: '/production/op40',
+                  name: 'OP40 包装记录',
+                },
+                {
                   path: '/production/automation',
                   name: '自动化注塑记录',
                 },
@@ -224,6 +230,7 @@ const AdminLayout = ({ onLogout }) => {
           <Route path="/production/op10" element={<ProductionData />} />
           <Route path="/production/op20" element={<Op20Data />} />
           <Route path="/production/op30" element={<Op30Data />} />
+          <Route path="/production/op40" element={<Op40Data />} />
           <Route path="/production/automation" element={<AutomationData />} />
           <Route path="/production/traceability" element={<TraceabilityData />} />
           <Route path="/config" element={<DashboardConfig />} />

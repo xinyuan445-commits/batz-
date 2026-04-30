@@ -97,7 +97,8 @@ const defaultConfig = {
     production: { target: 1404, max: 1600 },
     yieldRate: { target: 98, max: 100 },
     oee: { target: 90, max: 100 },
-    injection: { target: 144, max: 250 }
+    injection: { target: 144, max: 250 },
+    assembly: { speed: 30 } // Assembly speed in seconds per part
 };
 
 app.get('/api/config/kpi', (req, res) => {

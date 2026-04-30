@@ -97,6 +97,17 @@ const buildOp30Query = (whereClause) => `
     ORDER BY CreatedTime DESC
 `;
 
+// Helper for OP40 query
+const buildOp40Query = (whereClause) => `
+    SELECT 
+        CreatedTime,
+        Code,
+        Station
+    FROM op40_table
+    ${whereClause}
+    ORDER BY CreatedTime DESC
+`;
+
 // Helper for Automation query
 const buildAutomationQuery = (whereClause) => `
     SELECT 
@@ -238,6 +249,11 @@ router.get('/production/op30', async (req, res) => {
     await handlePaginatedRequest(req, res, 'op30_table', buildOp30Query);
 });
 
+// OP40 Production Data API
+router.get('/production/op40', async (req, res) => {
+    await handlePaginatedRequest(req, res, 'op40_table', buildOp40Query);
+});
+
 // Automation Data API
 router.get('/production/automation', async (req, res) => {
     await handlePaginatedRequest(req, res, 'auto_line_table', buildAutomationQuery);
@@ -262,12 +278,14 @@ router.get('/traceability', async (req, res) => {
         const queryOp10 = `SELECT 'OP10' as Source, CreatedTime, Code, ProductStatus, Production_PhotoResult1, Production_PhotoResult2, Production_PhotoResult3, Production_Circle1_Diameter, Production_Circle2_Diameter, Production_Circle3_Diameter, Production_CenterDist1, Production_CenterDist2, Production_CenterDist3 FROM op10_table WHERE Code LIKE @likeCode`;
         const queryOp20 = `SELECT 'OP20' as Source, CreatedTime, Code, ProductStatus, PressResult_Left, PressResult_Right, PressResult_Back, PressPressure_Left, PressDisplacement_Left, PressPressure_Right, PressDisplacement_Right, PressPressure_Back, PressDisplacement_Back FROM op20_table WHERE Code LIKE @likeCode`;
         const queryOp30 = `SELECT 'OP30' as Source, CreatedTime, Code, ProductStatus, Production_AngleResult_Vertical, Production_AngleResult_LeftParallel, Production_AngleResult_RightParallel, Production_Angle_Vertical, Production_Angle_LeftParallel, Production_Angle_RightParallel FROM op30_table WHERE Code LIKE @likeCode`;
+        const queryOp40 = `SELECT 'OP40' as Source, CreatedTime, Code, 1 as ProductStatus, Station FROM op40_table WHERE Code LIKE @likeCode`;
         const queryAuto = `SELECT 'Automation' as Source, CreatedTime, PartNumber as Code, IsOk as ProductStatus, GroupId FROM auto_line_table WHERE PartNumber LIKE @likeCode`;
 
-        const [resultOp10, resultOp20, resultOp30, resultAuto] = await Promise.all([
+        const [resultOp10, resultOp20, resultOp30, resultOp40, resultAuto] = await Promise.all([
             pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp10),
             pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp20),
             pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp30),
+            pool.request().input('likeCode', sql.VarChar, likeCode).query(queryOp40),
             pool.request().input('likeCode', sql.VarChar, likeCode).query(queryAuto)
         ]);
         
@@ -276,6 +294,7 @@ router.get('/traceability', async (req, res) => {
             ...resultOp10.recordset,
             ...resultOp20.recordset,
             ...resultOp30.recordset,
+            ...resultOp40.recordset,
             ...resultAuto.recordset.map(item => ({...item, ProductStatus: item.ProductStatus ? 1 : 2})) // Normalize IsOk (bit) to ProductStatus (int) 1=OK, 2=NG
         ].sort((a, b) => new Date(b.CreatedTime) - new Date(a.CreatedTime));
 

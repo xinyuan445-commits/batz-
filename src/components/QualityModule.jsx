@@ -107,23 +107,21 @@ const QualityModule = () => {
             }
         });
         
-        const rates = shiftHours.map((h, index) => {
+        const rates = shiftHours.map((h) => {
             const { inputTotal, ngTotal } = hourlyData[h];
             
             if (inputTotal > 0) {
-                // 生成伪随机种子：基于当前小时内 OP10 的投入数量，并且每 3 个才变化一次
-                // 这样历史时间段的数据折线就会彻底固定下来不再乱跳，只有当前正在生产的小时会“隔几次变下”
-                const seed = Math.floor(inputTotal / 3) + index * 100;
-                const pseudoRandom = Math.abs(Math.sin(seed));
+                // Calculate NG Rate based on OP10 total input
+                const ngRate = (ngTotal / inputTotal) * 100;
+                let rate = Number((100 - ngRate).toFixed(1));
                 
-                // Random deduction: 1, 2, or 3
-                const deduction = Math.floor(pseudoRandom * 3) + 1; 
-                let rate = 100 - deduction; // Result will be 99, 98, or 97
+                // Ensure it doesn't go below 0
+                if (rate < 0) rate = 0; 
+                if (rate > 100) rate = 100;
                 
-                return rate; // Return integer directly
+                return rate;
             }
-            // If no input data for this hour, return null so the line breaks, or 100 if you want a continuous line.
-            // Returning 0 makes the chart drop to 0 which looks bad.
+            // If no input data for this hour, return null so the line breaks
             return null; 
         });
 
