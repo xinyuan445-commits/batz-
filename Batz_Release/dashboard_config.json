@@ -1,18 +1,21 @@
 {
   "production": {
-    "target": 1404,
-    "max": 1600
+    "target": 1200,
+    "max": 1300
   },
   "yieldRate": {
-    "target": 50,
-    "max": 50
+    "target": 98,
+    "max": 100
   },
   "oee": {
     "target": 90,
     "max": 100
   },
   "injection": {
-    "target": 144,
-    "max": 250
+    "target": 120,
+    "max": 140
+  },
+  "assembly": {
+    "speed": 30
   }
 }
