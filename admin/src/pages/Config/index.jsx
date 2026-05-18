@@ -71,7 +71,12 @@ const DashboardConfig = () => {
             production: { target: 1404, max: 1600 },
             yieldRate: { target: 98, max: 100 },
             oee: { target: 90, max: 100 },
-            injection: { target: 1500, max: 2000 }
+            injection: { target: 144, max: 250 },
+            assembly: { speed: 30 },
+            op10: { 
+                dia1: { max: 50.55, min: 50.00 },
+                dia23: { max: 50.55, min: 49.50 }
+            }
           }}
         >
           <Row gutter={24}>
@@ -157,7 +162,107 @@ const DashboardConfig = () => {
           </Row>
 
           <Row gutter={24} style={{ marginTop: 24 }}>
-            {/* 装配配置 */}
+            {/* OP10 尺寸配置 独占第二行的一半 */}
+            <Col span={12}>
+              <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>OP10 尺寸公差配置</Title>}>
+                {/* 直径1 这一行 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="直径 1 上限 (Max)"
+                      name={['op10', 'dia1', 'max']}
+                      rules={[{ required: true, message: '请输入上限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.01} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label="直径 1 下限 (Min)"
+                      name={['op10', 'dia1', 'min']}
+                      rules={[{ required: true, message: '请输入下限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.01} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                {/* 直径2&3 这一行 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="直径 2&3 上限 (Max)"
+                      name={['op10', 'dia23', 'max']}
+                      rules={[{ required: true, message: '请输入上限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.01} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label="直径 2&3 下限 (Min)"
+                      name={['op10', 'dia23', 'min']}
+                      rules={[{ required: true, message: '请输入下限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.01} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+            </Col>
+
+            {/* OP20 压力配置 独占第二行的另一半 */}
+            <Col span={12}>
+              <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>OP20 压力公差配置</Title>}>
+                {/* 左右压力 这一行 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="左右压力 上限 (Max)"
+                      name={['op20', 'press12', 'max']}
+                      rules={[{ required: true, message: '请输入上限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label="左右压力 下限 (Min)"
+                      name={['op20', 'press12', 'min']}
+                      rules={[{ required: true, message: '请输入下限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                {/* 后压力 这一行 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="后压力 上限 (Max)"
+                      name={['op20', 'press3', 'max']}
+                      rules={[{ required: true, message: '请输入上限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label="后压力 下限 (Min)"
+                      name={['op20', 'press3', 'min']}
+                      rules={[{ required: true, message: '请输入下限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row gutter={24} style={{ marginTop: 24 }}>
+            {/* 装配配置 放到第三行 */}
             <Col span={6}>
               <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>装配效率计算 (Assembly OEE)</Title>}>
                 <Form.Item
@@ -168,6 +273,55 @@ const DashboardConfig = () => {
                 >
                   <InputNumber style={{ width: '100%' }} min={1} addonAfter="秒/个" />
                 </Form.Item>
+              </Card>
+            </Col>
+
+            {/* OP30 角度配置 放到第三行 */}
+            <Col span={12}>
+              <Card type="inner" title={<Title level={5} style={{ margin: 0 }}>OP30 角度公差配置</Title>}>
+                {/* 垂直角度 这一行 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="垂直角度 上限 (Max)"
+                      name={['op30', 'angle1', 'max']}
+                      rules={[{ required: true, message: '请输入上限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label="垂直角度 下限 (Min)"
+                      name={['op30', 'angle1', 'min']}
+                      rules={[{ required: true, message: '请输入下限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                {/* 平行角度 这一行 */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label="左右平行角度 上限 (Max)"
+                      name={['op30', 'angle23', 'max']}
+                      rules={[{ required: true, message: '请输入上限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label="左右平行角度 下限 (Min)"
+                      name={['op30', 'angle23', 'min']}
+                      rules={[{ required: true, message: '请输入下限' }]}
+                    >
+                      <InputNumber style={{ width: '100%' }} step={0.1} />
+                    </Form.Item>
+                  </Col>
+                </Row>
               </Card>
             </Col>
           </Row>

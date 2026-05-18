@@ -94,11 +94,23 @@ if (!fs.existsSync(configPath)) {
 }
 
 const defaultConfig = {
-    production: { target: 1404, max: 1600 },
+    production: { target: 1200, max: 1300 },
     yieldRate: { target: 98, max: 100 },
     oee: { target: 90, max: 100 },
-    injection: { target: 144, max: 250 },
-    assembly: { speed: 30 } // Assembly speed in seconds per part
+    injection: { target: 120, max: 140 },
+    assembly: { speed: 30 }, // Assembly speed in seconds per part
+    op10: { 
+        dia1: { max: 50.5, min: 50.0 },
+        dia23: { max: 50.5, min: 49.5 }
+    },
+    op20: {
+        press12: { max: 6.5, min: 1.3 },
+        press3: { max: 3.5, min: 1.0 }
+    },
+    op30: {
+        angle1: { max: 96.0, min: 84.0 },
+        angle23: { max: 6.0, min: -6.0 }
+    }
 };
 
 app.get('/api/config/kpi', (req, res) => {
@@ -240,7 +252,7 @@ app.get('/api/op10', async (req, res) => {
     try {
         const pool = await poolPromise;
         const result = await pool.request().query(`
-            SELECT TOP 15 
+            SELECT TOP 30 
                 CreatedTime,
                 Code,
                 ProductStatus,

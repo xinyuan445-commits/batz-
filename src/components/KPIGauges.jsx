@@ -14,7 +14,7 @@ const KPIGauges = () => {
   const lastOeeRef = useRef(0);
 
   const [config, setConfig] = useState({
-    production: { target: 1404, max: 1600 },
+    production: { target: 1200, max: 1300 },
     yieldRate: { target: 98, max: 100 },
     oee: { target: 90, max: 100 }
   });
@@ -40,15 +40,16 @@ const KPIGauges = () => {
         }
 
         const injectionData = await injectionRes.json();
-        const op10Data = await op10Res.json();
-        const op20Data = await op20Res.json();
-        const op30Data = await op30Res.json();
-        const op40Data = await op40Res.json();
         const configData = await configRes.json();
         
         if (configData) {
             setConfig(configData);
         }
+        
+        const op10Data = op10Res.ok ? await op10Res.json() : [];
+        const op20Data = op20Res.ok ? await op20Res.json() : [];
+        const op30Data = op30Res.ok ? await op30Res.json() : [];
+        const op40Data = op40Res.ok ? await op40Res.json() : [];
         
         if (!Array.isArray(injectionData)) return;
 

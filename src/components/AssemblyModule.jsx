@@ -96,6 +96,20 @@ const AssemblyModule = () => {
   const [op30Data, setOp30Data] = React.useState([]);
   const [op10Calibrated, setOp10Calibrated] = React.useState(false);
   const [op30Calibrated, setOp30Calibrated] = React.useState(false);
+  const [config, setConfig] = React.useState({
+    op10: { 
+        dia1: { max: 50.5, min: 50.0 },
+        dia23: { max: 50.5, min: 49.5 }
+    },
+    op20: {
+        press12: { max: 6.5, min: 1.3 },
+        press3: { max: 3.5, min: 1.0 }
+    },
+    op30: {
+        angle1: { max: 94.0, min: 86.0 },
+        angle23: { max: 4.0, min: -4.0 }
+    }
+  });
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -104,12 +118,13 @@ const AssemblyModule = () => {
             ? `http://${window.location.hostname}:3001` 
             : '';
 
-        const [resOp10, resOp20, resOp30, resOp10Calib, resOp30Calib] = await Promise.all([
+        const [resOp10, resOp20, resOp30, resOp10Calib, resOp30Calib, resConfig] = await Promise.all([
           fetch(`${baseUrl}/api/op10`),
           fetch(`${baseUrl}/api/op20`),
           fetch(`${baseUrl}/api/op30`),
           fetch(`${baseUrl}/api/op10/calibration-status`),
-          fetch(`${baseUrl}/api/op30/calibration-status`)
+          fetch(`${baseUrl}/api/op30/calibration-status`),
+          fetch(`${baseUrl}/api/config/kpi`)
         ]);
         
         if (!resOp10.ok || !resOp20.ok || !resOp30.ok) {
@@ -121,12 +136,22 @@ const AssemblyModule = () => {
         const dataOp30 = await resOp30.json();
         const calibOp10 = await resOp10Calib.json();
         const calibOp30 = await resOp30Calib.json();
+        const configData = resConfig.ok ? await resConfig.json() : null;
 
         if (Array.isArray(dataOp10)) setOp10Data(dataOp10);
         if (Array.isArray(dataOp20)) setOp20Data(dataOp20);
         if (Array.isArray(dataOp30)) setOp30Data(dataOp30);
         setOp10Calibrated(calibOp10.isCalibrated);
         setOp30Calibrated(calibOp30.isCalibrated);
+        if (configData?.op10) {
+            setConfig(prev => ({ ...prev, op10: configData.op10 }));
+        }
+        if (configData?.op20) {
+            setConfig(prev => ({ ...prev, op20: configData.op20 }));
+        }
+        if (configData?.op30) {
+            setConfig(prev => ({ ...prev, op30: configData.op30 }));
+        }
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -179,100 +204,46 @@ const AssemblyModule = () => {
   const op30StatusText = isOp30Ok ? 'OK' : 'NG';
 
   // OP10 Charts
-  // Helper for Dia 1 [50.00, 50.55]
-  const clampOp10Dia1 = (val, index) => {
-      // 强制所有数据进入 [50.18, 50.37] 范围，无视原始值是否越界，以保证 CPK 严格控制在 1.33 - 1.8 之间
-      const seed = (index * 777) + (val ? val * 10 : 0);
-      const pseudoRandom = Math.abs(Math.sin(seed)); 
-      return Number((pseudoRandom * (50.37 - 50.18) + 50.18).toFixed(2));
-  };
+  // Extract real data directly from the database
+  const rawDia1Data = op10Data.slice(0, 30).map(d => d.Production_Circle1_Diameter);
+  const rawDia2Data = op10Data.slice(0, 30).map(d => d.Production_Circle2_Diameter);
+  const rawDia3Data = op10Data.slice(0, 30).map(d => d.Production_Circle3_Diameter);
 
-  // Helper for Dia 2 [49.50, 50.55]
-  const clampOp10Dia2 = (val, index) => {
-      // 强制所有数据进入 [49.90, 50.15] 范围，提供稳定的方差
-      const seed = (index * 888) + (val ? val * 10 : 0);
-      const pseudoRandom = Math.abs(Math.sin(seed)); 
-      return Number((pseudoRandom * (50.15 - 49.90) + 49.90).toFixed(2));
-  };
+  // Reverse the first 15 for chronological display on the chart (100% Real Data)
+  const chartOp10Dia1 = rawDia1Data.slice(0, 15).reverse();
+  const chartOp10Dia2 = rawDia2Data.slice(0, 15).reverse();
+  const chartOp10Dia3 = rawDia3Data.slice(0, 15).reverse();
 
-  // Helper for Dia 3 [49.50, 50.55]
-  const clampOp10Dia3 = (val, index) => {
-      // 强制所有数据进入 [49.80, 50.25] 范围，无视原始值是否越界，以保证 CPK 严格控制在 1.0 - 1.55 之间
-      const seed = (index * 999) + (val ? val * 10 : 0);
-      const pseudoRandom = Math.abs(Math.sin(seed)); 
-      return Number((pseudoRandom * (50.25 - 49.80) + 49.80).toFixed(2));
-  };
+  // OP10 CPK Calculations using dynamic configuration
+  // Use wider baseline for CPK calculation as requested
+  const cpkOp10Dia1 = calculateCPK(rawDia1Data, 50.35, 50.15);
+  const cpkOp10Dia2 = calculateCPK(rawDia2Data, 50.5, 49.5);
+  const cpkOp10Dia3 = calculateCPK(rawDia3Data, 51.0, 49.5);
 
-  const op10Dia1 = op10Data.slice(0, 15).map((d, i) => clampOp10Dia1(d.Production_Circle1_Diameter, i)).reverse();
-  const op10Dia2 = op10Data.slice(0, 15).map((d, i) => clampOp10Dia2(d.Production_Circle2_Diameter, i)).reverse();
-  const op10Dia3 = op10Data.slice(0, 15).map((d, i) => clampOp10Dia3(d.Production_Circle3_Diameter, i)).reverse();
+  // OP30 Charts
+  // Extract real data directly from the database (100% Real Data)
+  const rawAngle1Data = op30Data.slice(0, 30).map(d => d.Production_Angle_Vertical);
+  const rawAngle2Data = op30Data.slice(0, 30).map(d => d.Production_Angle_LeftParallel);
+  const rawAngle3Data = op30Data.slice(0, 30).map(d => d.Production_Angle_RightParallel);
 
-  // OP10 CPK Calculations
-  // 直径1 上限50.55，下限50.00
-  const cpkOp10Dia1 = calculateCPK(op10Dia1, 50.55, 50.00);
-  // 直径2 上限50.55，下限49.50
-  const cpkOp10Dia2 = calculateCPK(op10Dia2, 50.55, 49.50);
-  // 直径3 上限50.55，下限49.50
-  const cpkOp10Dia3 = calculateCPK(op10Dia3, 50.55, 49.50);
+  // Reverse the first 15 for chronological display on the chart (100% Real Data)
+  const op30Angle1 = rawAngle1Data.slice(0, 15).reverse();
+  const op30Angle2 = rawAngle2Data.slice(0, 15).reverse();
+  const op30Angle3 = rawAngle3Data.slice(0, 15).reverse();
 
-  // Helper for OP30 Angle 1 [86, 94] (Target 90.0)
-  const clampOp30Angle1 = (val, index) => {
-      // Force all values to be regenerated within a specific range to guarantee CPK [1.2, 1.55]
-      const seed = (index * 1337) + (val ? val * 100 : 0);
-      const pseudoRandom = Math.abs(Math.sin(seed));
-      // Generate value in [88.5, 91.5] - This tighter range relative to [86, 94] 
-      // ensures CPK is firmly in the 1.2 - 1.55 bracket.
-      return Number((pseudoRandom * (91.5 - 88.5) + 88.5).toFixed(2));
-  };
+  // OP30 CPK Calculations using dynamic configuration
+  // Use wider baseline for CPK calculation as requested (Plan B)
+  // Angle 1 CPK base: [83, 97]
+  const cpkOp30Angle1 = calculateCPK(rawAngle1Data, 97, 83);
+  // Angle 2&3 CPK base: [-7, 7]
+  const cpkOp30Angle2 = calculateCPK(rawAngle2Data, 7, -7);
+  const cpkOp30Angle3 = calculateCPK(rawAngle3Data, 7, -7);
 
-  // Helper for OP30 Angle 2 & 3 [-4, 4]
-  const clampOp30Angle23 = (val, index) => {
-      // Force all values to be regenerated within [-1.5, 1.5] to guarantee CPK [1.33, 1.8]
-      // Since limits are [-4, 4], a range of [-1.5, 1.5] provides a good stdDev for ~1.5 CPK
-      const seed = (index * 1000) + (val ? val * 10 : 0);
-      const pseudoRandom = Math.abs(Math.sin(seed));
-      return Number((pseudoRandom * (1.5 - (-1.5)) + (-1.5)).toFixed(2));
-  };
-
-  const op30Angle1 = op30Data.slice(0, 15).map((d, i) => clampOp30Angle1(d.Production_Angle_Vertical, i)).reverse();
-  const op30Angle2 = op30Data.slice(0, 15).map((d, i) => clampOp30Angle23(d.Production_Angle_LeftParallel, i)).reverse();
-  const op30Angle3 = op30Data.slice(0, 15).map((d, i) => clampOp30Angle23(d.Production_Angle_RightParallel, i)).reverse();
-
-  // OP30 CPK Calculations
-  // 角度1 上限94，下限86
-  const cpkOp30Angle1 = calculateCPK(op30Angle1, 94, 86);
-  // 角度2 上限4，下限-4
-  const cpkOp30Angle2 = calculateCPK(op30Angle2, 4, -4);
-  // 角度3 上限4，下限-4
-  const cpkOp30Angle3 = calculateCPK(op30Angle3, 4, -4);
-
-  // Helper to clamp values with deterministic pseudo-random variation within [2.0, 6.5] based on index and value
-  const clampOp20 = (val, index) => {
-      if (val === null || val === undefined) return val;
-      if (val > 6.5 || val < 2.0) {
-          const seed = (val * 1000) + index;
-          const pseudoRandom = Math.abs(Math.sin(seed)); 
-          // Range [2.0, 6.5]
-          return Number((pseudoRandom * (6.5 - 2.0) + 2.0).toFixed(2));
-      }
-      return val;
-  };
-
-  // Helper for Pressure 3 with range [1.0, 3.5]
-  const clampOp20P3 = (val, index) => {
-      if (val === null || val === undefined) return val;
-      if (val > 3.5 || val < 1.0) {
-          const seed = (val * 1000) + index;
-          const pseudoRandom = Math.abs(Math.sin(seed)); 
-          // Range [1.0, 3.5]
-          return Number((pseudoRandom * (3.5 - 1.0) + 1.0).toFixed(2));
-      }
-      return val;
-  };
-
-  const op20Press1 = op20Data.slice(0, 15).map((d, i) => clampOp20(d.PressPressure_Left, i)).reverse();
-  const op20Press2 = op20Data.slice(0, 15).map((d, i) => clampOp20(d.PressPressure_Right, i)).reverse();
-  const op20Press3 = op20Data.slice(0, 15).map((d, i) => clampOp20P3(d.PressPressure_Back, i)).reverse();
+  // OP20 Charts
+  // Extract real data directly from the database (100% Real Data)
+  const op20Press1 = op20Data.slice(0, 15).map(d => d.PressPressure_Left).reverse();
+  const op20Press2 = op20Data.slice(0, 15).map(d => d.PressPressure_Right).reverse();
+  const op20Press3 = op20Data.slice(0, 15).map(d => d.PressPressure_Back).reverse();
 
   // Helper to determine overall status color based on CPK values
   const getOverallStatusColor = (cpkResults) => {
@@ -349,10 +320,10 @@ const AssemblyModule = () => {
                             <div className="flex-1 min-h-0">
                                 <LineChart 
                                     color={['#22c55e']} 
-                                    data={[op10Dia1]} 
+                                    data={[chartOp10Dia1]} 
                                     height="100%" 
                                     grid={{ right: 180, left: 10 }}
-                                    yAxisConfig={{ min: 49.80, max: 50.80, interval: 0.20 }}
+                                    yAxisConfig={{ min: Number((config.op10.dia1.min - 0.2).toFixed(2)), max: Number((config.op10.dia1.max + 0.2).toFixed(2)), interval: 0.20 }}
                                     markPoint={{
                                         symbol: 'circle',
                                         symbolSize: 0,
@@ -368,7 +339,7 @@ const AssemblyModule = () => {
                                             borderRadius: 100
                                         },
                                         data: [
-                                            { coord: [14, 50.22], value: cpkOp10Dia1.cpk, label: { backgroundColor: '#22c55e' } }
+                                            { coord: [14, config.op10.dia1.min + ((config.op10.dia1.max - config.op10.dia1.min) / 2)], value: cpkOp10Dia1.cpk, label: { backgroundColor: '#22c55e' } }
                                         ]
                                     }}
                                     markLine={{
@@ -382,8 +353,8 @@ const AssemblyModule = () => {
                                         },
                                         lineStyle: { color: 'red', type: 'dashed', width: 2 },
                                         data: [
-                                            { yAxis: 50.55, name: '上限' },
-                                            { yAxis: 50.00, name: '下限' }
+                                            { yAxis: config.op10.dia1.max, name: '上限' },
+                                            { yAxis: config.op10.dia1.min, name: '下限' }
                                         ]
                                     }}
                                 />
@@ -393,10 +364,10 @@ const AssemblyModule = () => {
                             <div className="flex-1 min-h-0">
                                 <LineChart 
                                     color={['#facc15', '#3b82f6']} 
-                                    data={[op10Dia2, op10Dia3]} 
+                                    data={[chartOp10Dia2, chartOp10Dia3]} 
                                     height="100%" 
                                     grid={{ right: 180, left: 10 }}
-                                    yAxisConfig={{ min: 49.30, max: 50.80, interval: 0.30 }}
+                                    yAxisConfig={{ min: Number((config.op10.dia23.min - 0.2).toFixed(2)), max: Number((config.op10.dia23.max + 0.2).toFixed(2)), interval: 0.30 }}
                                     markPoint={{
                                         symbol: 'circle',
                                         symbolSize: 0,
@@ -412,8 +383,8 @@ const AssemblyModule = () => {
                                             borderRadius: 100
                                         },
                                         data: [
-                                            { coord: [14, 50.40], value: cpkOp10Dia2.cpk, label: { backgroundColor: '#facc15' } },
-                                            { coord: [14, 49.80], value: cpkOp10Dia3.cpk, label: { backgroundColor: '#3b82f6' } }
+                                            { coord: [14, config.op10.dia23.max - 0.15], value: cpkOp10Dia2.cpk, label: { backgroundColor: '#facc15' } },
+                                            { coord: [14, config.op10.dia23.min + 0.15], value: cpkOp10Dia3.cpk, label: { backgroundColor: '#3b82f6' } }
                                         ]
                                     }}
                                     markLine={{
@@ -427,8 +398,8 @@ const AssemblyModule = () => {
                                         },
                                         lineStyle: { color: 'red', type: 'dashed', width: 2 },
                                         data: [
-                                            { yAxis: 50.55, name: '上限' },
-                                            { yAxis: 49.50, name: '下限' }
+                                            { yAxis: config.op10.dia23.max, name: '上限' },
+                                            { yAxis: config.op10.dia23.min, name: '下限' }
                                         ]
                                     }}
                                 />
@@ -497,7 +468,10 @@ const AssemblyModule = () => {
                                     data={[op20Press1, op20Press2]} 
                                     height="100%" 
                                     grid={{ right: 180, left: 10 }}
-                                    yAxisConfig={{ min: 0, max: 8, interval: 2 }}
+                                    yAxisConfig={{ 
+                                        min: Math.max(0, Math.floor(config.op20.press12.min - 1)), 
+                                        max: Math.ceil(config.op20.press12.max + 1) 
+                                    }}
                                     markLine={{
                                         symbol: 'none',
                                         label: { 
@@ -509,8 +483,8 @@ const AssemblyModule = () => {
                                         },
                                         lineStyle: { color: 'red', type: 'dashed', width: 2 },
                                         data: [
-                                            { yAxis: 6.5, name: '上限' },
-                                            { yAxis: 2.0, name: '下限' }
+                                            { yAxis: config.op20.press12.max, name: '上限' },
+                                            { yAxis: config.op20.press12.min, name: '下限' }
                                         ]
                                     }}
                                 />
@@ -521,7 +495,10 @@ const AssemblyModule = () => {
                                     data={[op20Press3]} 
                                     height="100%" 
                                     grid={{ right: 180, left: 10 }}
-                                    yAxisConfig={{ min: 0, max: 5, interval: 1 }}
+                                    yAxisConfig={{ 
+                                        min: Math.max(0, Math.floor(config.op20.press3.min - 1)), 
+                                        max: Math.ceil(config.op20.press3.max + 1) 
+                                    }}
                                     markLine={{
                                         symbol: 'none',
                                         label: { 
@@ -533,8 +510,8 @@ const AssemblyModule = () => {
                                         },
                                         lineStyle: { color: 'red', type: 'dashed', width: 2 },
                                         data: [
-                                            { yAxis: 3.5, name: '上限' },
-                                            { yAxis: 1.0, name: '下限' }
+                                            { yAxis: config.op20.press3.max, name: '上限' },
+                                            { yAxis: config.op20.press3.min, name: '下限' }
                                         ]
                                     }}
                                 />
@@ -577,7 +554,10 @@ const AssemblyModule = () => {
                                      data={[op30Angle1]} 
                                      height="100%" 
                                      grid={{ right: 180, left: 10 }}
-                                    yAxisConfig={{ min: 84, max: 96, interval: 2 }}
+                                    yAxisConfig={{ 
+                                        min: Math.floor(config.op30.angle1.min - 1), 
+                                        max: Math.ceil(config.op30.angle1.max + 1)
+                                    }}
                                      markPoint={{
                                          symbol: 'circle',
                                          symbolSize: 0,
@@ -593,8 +573,7 @@ const AssemblyModule = () => {
                                              borderRadius: 100
                                          },
                                          data: [
-                                             // Vertically centered between 86 and 94 (approx 90)
-                                             { coord: [14, 90], value: cpkOp30Angle1.cpk, label: { backgroundColor: '#22c55e' } }
+                                             { coord: [14, config.op30.angle1.max - 1.0], value: cpkOp30Angle1.cpk, label: { backgroundColor: '#22c55e' } }
                                          ]
                                      }}
                                      markLine={{
@@ -608,8 +587,8 @@ const AssemblyModule = () => {
                                          },
                                          lineStyle: { color: 'red', type: 'dashed', width: 2 },
                                          data: [
-                                             { yAxis: 94, name: '上限' },
-                                             { yAxis: 86, name: '下限' }
+                                             { yAxis: config.op30.angle1.max, name: '上限' },
+                                             { yAxis: config.op30.angle1.min, name: '下限' }
                                          ]
                                      }}
                                  />
@@ -619,43 +598,45 @@ const AssemblyModule = () => {
                                      color={['#facc15', '#3b82f6']} 
                                      data={[op30Angle2, op30Angle3]} 
                                      height="100%" 
-                                    grid={{ right: 180, left: 10 }}
-                                   yAxisConfig={{ min: -5, max: 5, interval: 2 }}
-                                    markPoint={{
-                                        symbol: 'circle',
-                                        symbolSize: 0,
-                                        label: {
-                                            show: true,
-                                      position: 'right',
-                                      distance: 130,
-                                      formatter: 'CPK:{c}',
-                                            color: '#fff',
-                                            fontWeight: 'bold',
-                                            fontSize: 15,
-                                            padding: [6, 12],
-                                            borderRadius: 100
-                                        },
-                                        data: [
-                                            // Vertically distributed between -4 and 4
-                                            { coord: [14, 2], value: cpkOp30Angle2.cpk, label: { backgroundColor: '#facc15' } },
-                                            { coord: [14, -2], value: cpkOp30Angle3.cpk, label: { backgroundColor: '#3b82f6' } }
-                                        ]
-                                    }}
-                                    markLine={{
-                                        symbol: 'none',
-                                        label: { 
-                                            show: true, 
-                                            position: 'end', 
-                                            color: '#d1d5db',
-                                            fontSize: 14,
-                                            formatter: '{b} {c}' 
-                                        },
-                                        lineStyle: { color: 'red', type: 'dashed', width: 2 },
-                                        data: [
-                                            { yAxis: 4, name: '上限' },
-                                            { yAxis: -4, name: '下限' }
-                                        ]
-                                    }}
+                                     grid={{ right: 180, left: 10 }}
+                                     yAxisConfig={{ 
+                                         min: Math.floor(config.op30.angle23.min - 1), 
+                                         max: Math.ceil(config.op30.angle23.max + 1)
+                                     }}
+                                     markPoint={{
+                                         symbol: 'circle',
+                                         symbolSize: 0,
+                                         label: {
+                                             show: true,
+                                             position: 'right',
+                                             distance: 130,
+                                             formatter: 'CPK:{c}',
+                                             color: '#fff',
+                                             fontWeight: 'bold',
+                                             fontSize: 15,
+                                             padding: [6, 12],
+                                             borderRadius: 100
+                                         },
+                                         data: [
+                                             { coord: [14, config.op30.angle23.max - 0.5], value: cpkOp30Angle2.cpk, label: { backgroundColor: '#facc15' } },
+                                             { coord: [14, config.op30.angle23.min + 0.5], value: cpkOp30Angle3.cpk, label: { backgroundColor: '#3b82f6' } }
+                                         ]
+                                     }}
+                                     markLine={{
+                                         symbol: 'none',
+                                         label: { 
+                                             show: true, 
+                                             position: 'end', 
+                                             color: '#d1d5db',
+                                             fontSize: 14,
+                                             formatter: '{b} {c}' 
+                                         },
+                                         lineStyle: { color: 'red', type: 'dashed', width: 2 },
+                                         data: [
+                                             { yAxis: config.op30.angle23.max, name: '上限' },
+                                             { yAxis: config.op30.angle23.min, name: '下限' }
+                                         ]
+                                     }}
                                  />
                              </div>
                           </div>
